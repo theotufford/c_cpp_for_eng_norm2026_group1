@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <linux/input-event-codes.h>
@@ -16,20 +17,36 @@
 #include <unordered_set>
 #include <vector>
 
+using namespace std;
+
 struct vector_2d {
   int x, y;
-  friend bool operator ==(vector_2d const& vec_a, vector_2d const& vec_b){
+  int color_value;
+  friend bool operator==(vector_2d const &vec_a, vector_2d const &vec_b) {
     return vec_a.x == vec_b.x && vec_a.y == vec_b.y;
   };
-  vector_2d() : x(0), y(0) {}
-  vector_2d(int x, int y) : x(x), y(y) {}
+  vector_2d() : x(0), y(0), color_value(1) {}
+  vector_2d(int x, int y) : x(x), y(y), color_value(1) {}
 };
+namespace std {
+template <> struct hash<vector_2d> {
+  // sets the () operator on vector_2d to return a hash
+  size_t operator()(const vector_2d &vec) const {
+    size_t x_hash = hash<int>{}(vec.x);
+    size_t y_hash = hash<int>{}(vec.y);
+    return (x_hash << 16) ^ y_hash;
+  }
+  // bit shift to avoid commutative collision
+  // i feel like there is a collision lurking here
+  // but for now testing indicates that with a large
+  // enough bitshift the non-commutative destruction
+  // of information will make the hashing function
+  // non invertable
+};
+} // namespace std
 
-
-
-std::vector<vector_2d> make_point_model(int input_coords[][2],
-                                        int point_count) {
-  std::vector<vector_2d> points;
+vector<vector_2d> make_point_model(int input_coords[][2], int point_count) {
+  vector<vector_2d> points;
   // insane silent bug just fixed where not initializing vector index to 0
   // caused the loop to quit instantly and silently
   // broke everything very quietly
@@ -46,16 +63,16 @@ class Game;
 
 class gameObj {
 public:
-  std::vector<vector_2d> model; // vector of 2d vectors relative to its
-                                // transform that make up the body of the obj
-  int direction;                // cardinal direction
+  vector<vector_2d> model; // vector of 2d vectors relative to its
+                           // transform that make up the body of the obj
+  int direction;           // cardinal direction
   int move_increment;
   vector_2d current_position;
   vector_2d prev_position;
   Game &owning_game;
-  void queue_render();
+  void update_render();
   void collsion_check();
-  void handle_collision(gameObj * colliding_object);
+  void handle_collision(gameObj *colliding_object);
   void abs_transform(vector_2d coords);
   void delta_transform(vector_2d delta);
   gameObj(Game &owning_game);
@@ -71,16 +88,17 @@ class asciiCanvas {
 private:
   const char _populated_character;
   const char _background_character;
-  int **_canvas;
 
 public:
+  int **int_map;
   const int height, width;
   void render();
-  std::vector<vector_2d> render_queue;
-  std::vector<vector_2d> render_dequeue;
+  unordered_set<vector_2d> rendered_in_this_loop;
+  vector<vector_2d> render_queue;
+  vector<vector_2d> render_dequeue;
   void fill(int x_coord, int y_coord);
   void clear(int x_coord, int y_coord);
-  std::stringstream text_footer;
+  stringstream text_footer;
   asciiCanvas(                                      //
       int height,                                   //
       int width,                                    //
@@ -90,11 +108,11 @@ public:
         _populated_character(populated_character),  //
         _background_character(background_character) //
   {                                                 //
-    _canvas = (int **)malloc(height * sizeof(int **));
+    int_map = (int **)malloc(height * sizeof(int **));
     for (int y_ind = 0; y_ind < height; ++y_ind) {
-      _canvas[y_ind] = (int *)malloc(width * sizeof(int));
+      int_map[y_ind] = (int *)malloc(width * sizeof(int));
       for (int x_ind = 0; x_ind < width; ++x_ind) {
-        _canvas[y_ind][x_ind] = 0;
+        int_map[y_ind][x_ind] = 0;
       }
     }
   }
@@ -103,22 +121,21 @@ public:
 class Game {
 public:
   asciiCanvas *canvas_instance;
-  std::vector<gameObj *> objects; // interesting idea would be to order this by
-                                  // position to optimize
+  vector<gameObj *> objects; // interesting idea would be to order this by
+                             // position to optimize
 };
 
-gameObj::gameObj(Game &owning_game) :owning_game(owning_game){
+gameObj::gameObj(Game &owning_game) : owning_game(owning_game) {
   owning_game.objects.push_back(this);
-  queue_render();
+  update_render();
 }
 
-playerObj::playerObj(Game &owning_game) : gameObj(owning_game) {
-};
+playerObj::playerObj(Game &owning_game) : gameObj(owning_game) {};
 
-void gameObj::handle_collision(gameObj * colliding_object){
+void gameObj::handle_collision(gameObj *colliding_object) {
   system("clear");
-  std::cout << "center collision !!!"<< std::endl;
-  std::exit(EXIT_SUCCESS);
+  cout << "center collision !!!" << std::endl;
+  exit(EXIT_SUCCESS);
 }
 
 void gameObj::collsion_check() {
@@ -133,15 +150,19 @@ void gameObj::collsion_check() {
   }
 }
 
-
-void gameObj::queue_render() {
+void gameObj::update_render() {
   asciiCanvas *active_canvas = owning_game.canvas_instance;
   active_canvas->text_footer.str("");
   for (vector_2d model_vector : model) {
     vector_2d abs_position;
     abs_position.x = current_position.x + model_vector.x;
     abs_position.y = current_position.y + model_vector.y;
-    active_canvas->render_queue.push_back(abs_position);
+    if (active_canvas->rendered_in_this_loop.contains(abs_position)) {
+      continue;
+    }
+    active_canvas->int_map[abs_position.y][abs_position.x] =
+        model_vector.color_value;
+    active_canvas->rendered_in_this_loop.insert(abs_position);
   }
   if (current_position == prev_position) {
     return;
@@ -151,23 +172,24 @@ void gameObj::queue_render() {
     vector_2d abs_position;
     abs_position.x = prev_position.x + model_vector.x;
     abs_position.y = prev_position.y + model_vector.y;
-    active_canvas->text_footer << "(" << abs_position.x << "," << abs_position.y
-                               << ") ";
-    active_canvas->render_dequeue.push_back(abs_position);
+    if (active_canvas->rendered_in_this_loop.contains(abs_position)) {
+      continue;
+    }
+    active_canvas->int_map[abs_position.y][abs_position.x] = 0;
   }
 }
 
 void gameObj::abs_transform(vector_2d coords) {
   prev_position = current_position;
   current_position = coords;
-  queue_render();
+  update_render();
 }
 
 void gameObj::delta_transform(vector_2d delta) {
   prev_position = current_position;
   current_position.x += delta.x;
   current_position.y += delta.y;
-  queue_render();
+  update_render();
 }
 
 enum keybinds {
@@ -195,7 +217,7 @@ void playerObj::handle_player_input(input_event key_event) {
     transform_vector = vector_2d(0, 1);
     break;
   case EXIT_BIND:
-    std::exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
   }
   delta_transform(transform_vector);
   return;
@@ -203,35 +225,14 @@ void playerObj::handle_player_input(input_event key_event) {
 // re-render the ascii canvas building a string stream to represent
 // the entire display and then printing it all at once assembled
 void asciiCanvas::render() {
-  // set stale points in dequeue vector to background
-  while (!render_dequeue.empty()) {
-    vector_2d vector = render_dequeue.back();
-    if (vector.x < width && vector.x > 0 && vector.y < height && vector.y > 0) {
-      _canvas[vector.y][vector.x] = 0;
-    }
-    render_dequeue.pop_back();
-  } // activate or reactivate living points in render queue
-  while (!render_queue.empty()) {
-    // I havent been able to figure out hash maps
-    // for custom structs. so its actually more efficient
-    // to re-render everything than it is to search for
-    // duplicate renders and remove them.
-    // this would not be the case if I understood hash maps. but
-    // as of now I would have to iteratively search the entire
-    // point model to see if there are duplicates.
-    vector_2d &vector = render_queue.back();
-    if (vector.x < width && vector.x > 0 && vector.y < height && vector.y > 0) {
-      _canvas[vector.y][vector.x] = 1;
-    }
-    render_queue.pop_back();
-  }
-  system("clear");                 // clear screen
-  std::stringstream screen_output; // actual rendered output sstream
+  system("clear");               // clear screen
+  rendered_in_this_loop.clear(); // clear render collision history
+  stringstream screen_output;    // actual rendered output sstream
   for (int y_ind = 0; y_ind < height; ++y_ind) {
     for (int x_ind = 0; x_ind < width; ++x_ind) {
       // scan entire canvas for 1s
       // insert a populated char when found, otherwise insert bg char
-      if (_canvas[y_ind][x_ind] == 1) {
+      if (int_map[y_ind][x_ind] == 1) {
         screen_output << _populated_character;
         continue;
       }
@@ -239,8 +240,7 @@ void asciiCanvas::render() {
     }
     screen_output << "\n";
   }
-  std::cout << screen_output.str() << text_footer.str() << "\ny to quit"
-            << std::endl;
+  cout << screen_output.str() << text_footer.str() << "\ny to quit" << endl;
 }
 
 int main() {
@@ -263,26 +263,37 @@ int main() {
   guy.current_position = player_spawn_point;
   int guy_model_points[][2] = {{0, 1},  {1, 0},  {1, 1},  {-1, 0},
                                {0, -1}, {-1, 1}, {1, -1}, {-1, -1}};
-  guy.model = make_point_model(guy_model_points, std::size(guy_model_points));
+  guy.model = make_point_model(guy_model_points, size(guy_model_points));
 
   // ---- game obstacle setup ----
   gameObj brick_wall(generic_game);
-  vector_2d wall_center = vector_2d(10,10);
+  vector_2d wall_center = vector_2d(10, 10);
   brick_wall.current_position = wall_center;
-  int wall_model_points[][2]={
-    {0,0},{0,1},{0,2},{0,3},{0,4},{0,5},{0,6},{0,7},{0,8},{0,9},{0,10},{0,11},{0,12},{0,13},{0,14},{0,15},
-    {1,0},{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10},{1,11},{1,12},{1,13},{1,14},{1,15},
-    {2,0},{2,1},{2,2},{2,3},{2,4},{2,5},{2,6},{2,7},{2,8},{2,9},{2,10},{2,11},{2,12},{2,13},{2,14},{2,15},
-    {3,0},{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15},
-    {4,0},{4,1},{4,2},{4,3},{4,4},{4,5},{4,6},{4,7},{4,8},{4,9},{4,10},{4,11},{4,12},{4,13},{4,14},{4,15},
-    {5,0},{5,1},{5,2},{5,3},{5,4},{5,5},{5,6},{5,7},{5,8},{5,9},{5,10},{5,11},{5,12},{5,13},{5,14},{5,15},
-    {6,0},{6,1},{6,2},{6,3},{6,4},{6,5},{6,6},{6,7},{6,8},{6,9},{6,10},{6,11},{6,12},{6,13},{6,14},{6,15},
-    {7,0},{7,1},{7,2},{7,3},{7,4},{7,5},{7,6},{7,7},{7,8},{7,9},{7,10},{7,11},{7,12},{7,13},{7,14},{7,15},
-    {8,0},{8,1},{8,2},{8,3},{8,4},{8,5},{8,6},{8,7},{8,8},{8,9},{8,10},{8,11},{8,12},{8,13},{8,14},{8,15},
-    {9,0},{9,1},{9,2},{9,3},{9,4},{9,5},{9,6},{9,7},{9,8},{9,9},{9,10},{9,11},{9,12},{9,13},{9,14},{9,15},
+  int wall_model_points[][2] = {
+      {0, 0}, {0, 1}, {0, 2},  {0, 3},  {0, 4},  {0, 5},  {0, 6},  {0, 7},
+      {0, 8}, {0, 9}, {0, 10}, {0, 11}, {0, 12}, {0, 13}, {0, 14}, {0, 15},
+      {1, 0}, {1, 1}, {1, 2},  {1, 3},  {1, 4},  {1, 5},  {1, 6},  {1, 7},
+      {1, 8}, {1, 9}, {1, 10}, {1, 11}, {1, 12}, {1, 13}, {1, 14}, {1, 15},
+      {2, 0}, {2, 1}, {2, 2},  {2, 3},  {2, 4},  {2, 5},  {2, 6},  {2, 7},
+      {2, 8}, {2, 9}, {2, 10}, {2, 11}, {2, 12}, {2, 13}, {2, 14}, {2, 15},
+      {3, 0}, {3, 1}, {3, 2},  {3, 3},  {3, 4},  {3, 5},  {3, 6},  {3, 7},
+      {3, 8}, {3, 9}, {3, 10}, {3, 11}, {3, 12}, {3, 13}, {3, 14}, {3, 15},
+      {4, 0}, {4, 1}, {4, 2},  {4, 3},  {4, 4},  {4, 5},  {4, 6},  {4, 7},
+      {4, 8}, {4, 9}, {4, 10}, {4, 11}, {4, 12}, {4, 13}, {4, 14}, {4, 15},
+      {5, 0}, {5, 1}, {5, 2},  {5, 3},  {5, 4},  {5, 5},  {5, 6},  {5, 7},
+      {5, 8}, {5, 9}, {5, 10}, {5, 11}, {5, 12}, {5, 13}, {5, 14}, {5, 15},
+      {6, 0}, {6, 1}, {6, 2},  {6, 3},  {6, 4},  {6, 5},  {6, 6},  {6, 7},
+      {6, 8}, {6, 9}, {6, 10}, {6, 11}, {6, 12}, {6, 13}, {6, 14}, {6, 15},
+      {7, 0}, {7, 1}, {7, 2},  {7, 3},  {7, 4},  {7, 5},  {7, 6},  {7, 7},
+      {7, 8}, {7, 9}, {7, 10}, {7, 11}, {7, 12}, {7, 13}, {7, 14}, {7, 15},
+      {8, 0}, {8, 1}, {8, 2},  {8, 3},  {8, 4},  {8, 5},  {8, 6},  {8, 7},
+      {8, 8}, {8, 9}, {8, 10}, {8, 11}, {8, 12}, {8, 13}, {8, 14}, {8, 15},
+      {9, 0}, {9, 1}, {9, 2},  {9, 3},  {9, 4},  {9, 5},  {9, 6},  {9, 7},
+      {9, 8}, {9, 9}, {9, 10}, {9, 11}, {9, 12}, {9, 13}, {9, 14}, {9, 15},
   };
 
-  brick_wall.model = make_point_model(wall_model_points, std::size( wall_model_points ));
+  brick_wall.model =
+      make_point_model(wall_model_points, size(wall_model_points));
 
   // ---- input setup ----
   // TODO get OS input to decide library to use
@@ -305,7 +316,7 @@ int main() {
 
   // ---- main loop ----
 
-  brick_wall.queue_render();
+  brick_wall.update_render();
   while (true) {
     bool getting_input =
         0 < read(file_dscrptr, // file descriptor
