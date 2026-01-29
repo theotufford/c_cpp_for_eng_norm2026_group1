@@ -19,9 +19,12 @@
 
 using namespace std;
 
+class gameObj;
+
 struct vector_2d {
   int x, y;
   int color_value;
+  gameObj *collision_owner;
   friend bool operator==(vector_2d const &vec_a, vector_2d const &vec_b) {
     return vec_a.x == vec_b.x && vec_a.y == vec_b.y;
   };
@@ -45,7 +48,8 @@ template <> struct hash<vector_2d> {
 };
 } // namespace std
 
-vector<vector_2d> make_point_model(int input_coords[][2], int point_count) {
+vector<vector_2d> make_point_model(int input_coords[][2], int point_count,
+                                   gameObj *collision_owner) {
   vector<vector_2d> points;
   // insane silent bug just fixed where not initializing vector index to 0
   // caused the loop to quit instantly and silently
@@ -54,6 +58,7 @@ vector<vector_2d> make_point_model(int input_coords[][2], int point_count) {
     vector_2d point_tmp;
     point_tmp.x = input_coords[coord_index][0];
     point_tmp.y = input_coords[coord_index][1];
+    point_tmp.collision_owner = collision_owner;
     points.push_back(point_tmp);
   }
   return points;
@@ -71,7 +76,6 @@ public:
   vector_2d prev_position;
   Game &owning_game;
   void update_render();
-  void collsion_check();
   void handle_collision(gameObj *colliding_object);
   void abs_transform(vector_2d coords);
   void delta_transform(vector_2d delta);
@@ -132,22 +136,11 @@ gameObj::gameObj(Game &owning_game) : owning_game(owning_game) {
 
 playerObj::playerObj(Game &owning_game) : gameObj(owning_game) {};
 
+// not working yet
 void gameObj::handle_collision(gameObj *colliding_object) {
   system("clear");
   cout << "center collision !!!" << std::endl;
   exit(EXIT_SUCCESS);
-}
-
-void gameObj::collsion_check() {
-  for (gameObj *other_obj_ptr : owning_game.objects) {
-    if (this == other_obj_ptr) {
-      continue; // other objects not this one
-    }
-    if (current_position == other_obj_ptr->current_position) {
-      other_obj_ptr->handle_collision(this);
-      handle_collision(other_obj_ptr);
-    }
-  }
 }
 
 void gameObj::update_render() {
@@ -158,20 +151,29 @@ void gameObj::update_render() {
     abs_position.x = current_position.x + model_vector.x;
     abs_position.y = current_position.y + model_vector.y;
     if (active_canvas->rendered_in_this_loop.contains(abs_position)) {
+      active_canvas->text_footer << "colliding coords: " << abs_position.x
+                                 << abs_position.y << "\t";
+      gameObj colliding_entity =
+          *active_canvas->rendered_in_this_loop.find(abs_position)
+               ->collision_owner; // collision detected get colliding gameObj 
+      // calls the collision handler of this game obj
+      handle_collision(&colliding_entity);
+      // calls the collision handler of the other game obj
+      colliding_entity.handle_collision(this);
       continue;
     }
     active_canvas->int_map[abs_position.y][abs_position.x] =
         model_vector.color_value;
     active_canvas->rendered_in_this_loop.insert(abs_position);
   }
-  if (current_position == prev_position) {
+  if (current_position == prev_position) { // no need to loop through a bunch of false cases
     return;
   }
-  active_canvas->text_footer << "cached coords: ";
   for (vector_2d model_vector : model) {
     vector_2d abs_position;
     abs_position.x = prev_position.x + model_vector.x;
     abs_position.y = prev_position.y + model_vector.y;
+    // dont remove points that another entity has activated
     if (active_canvas->rendered_in_this_loop.contains(abs_position)) {
       continue;
     }
@@ -263,7 +265,7 @@ int main() {
   guy.current_position = player_spawn_point;
   int guy_model_points[][2] = {{0, 1},  {1, 0},  {1, 1},  {-1, 0},
                                {0, -1}, {-1, 1}, {1, -1}, {-1, -1}};
-  guy.model = make_point_model(guy_model_points, size(guy_model_points));
+  guy.model = make_point_model(guy_model_points, size(guy_model_points), &guy);
 
   // ---- game obstacle setup ----
   gameObj brick_wall(generic_game);
@@ -293,7 +295,7 @@ int main() {
   };
 
   brick_wall.model =
-      make_point_model(wall_model_points, size(wall_model_points));
+      make_point_model(wall_model_points, size(wall_model_points), &brick_wall);
 
   // ---- input setup ----
   // TODO get OS input to decide library to use
