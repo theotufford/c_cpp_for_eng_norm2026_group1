@@ -8,6 +8,7 @@
 #include <memory>
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <tuple>
 #include <unistd.h>
 #include <vector>
@@ -16,26 +17,28 @@ struct point_2d {
   int x, y;
   point_2d() : x(0), y(0) {}
 };
-struct point_model {
+
+std::vector<point_2d> make_point_model(int input_points[][2], int point_count) {
   std::vector<point_2d> points;
-  point_model(int input_points[][2], int point_count) {
-    for (int point_index; point_index < point_count; point_index++) {
-      point_2d point_tmp;
-      point_tmp.x = input_points[point_index][0];
-      point_tmp.y = input_points[point_index][1];
-      points.push_back(point_tmp);
-    }
+  // insane silent bug just fixed where not initializing point index to 0
+  // caused the loop to quit instantly and silently
+  // broke everything very quietly
+  for (int point_index = 0; point_index < point_count; point_index++) {
+    point_2d point_tmp;
+    point_tmp.x = input_points[point_index][0];
+    point_tmp.y = input_points[point_index][1];
+    points.push_back(point_tmp);
   }
-};
+  return points;
+}
 
 class Game;
 
 class gameObj {
 public:
-  point_model *model; // vector of point tuples that
-                      // describe relative position
-                      // of model points
-
+  std::vector<point_2d> model; // vector of points relative to its transform
+                               // that make up the body of the obj
+  int direction; // cardinal direction
   point_2d current_position;
   Game &owning_game;
   gameObj(Game &owning_game) : owning_game(owning_game) {}
@@ -61,6 +64,7 @@ public:
   std::vector<point_2d> render_dequeue;
   void fill(int x_coord, int y_coord);
   void clear(int x_coord, int y_coord);
+  std::stringstream text_footer;
   asciiCanvas(                                      //
       int height,                                   //
       int width,                                    //
@@ -98,12 +102,15 @@ enum keybinds {
   DOWN_BIND = KEY_S,
   EXIT_BIND = KEY_Y,
 };
+
+// generate direction vector from input
 void actorObj::handle_player_input(input_event key_event) {
-  for (point_2d model_point : model->points) {
+  asciiCanvas *active_canvas = owning_game.canvas_instance;
+  for (point_2d model_point : model) {
     point_2d abs_position;
     abs_position.x = current_position.x + model_point.x;
     abs_position.y = current_position.y + model_point.y;
-    owning_game.canvas_instance->render_dequeue.push_back(abs_position);
+    active_canvas->render_dequeue.push_back(abs_position);
   }
   switch (key_event.code) {
   case RIGHT_BIND:
@@ -121,36 +128,29 @@ void actorObj::handle_player_input(input_event key_event) {
   case EXIT_BIND:
     std::exit(EXIT_SUCCESS);
   }
-  for (point_2d model_point : model->points) {
+  active_canvas->text_footer.str("");
+  for (point_2d model_point : model) {
     point_2d abs_position;
     abs_position.x = current_position.x + model_point.x;
     abs_position.y = current_position.y + model_point.y;
-    owning_game.canvas_instance->render_queue.push_back(abs_position);
+    active_canvas->render_queue.push_back(abs_position);
   }
   return;
 }
 void asciiCanvas::render() {
-  while (!render_queue.empty()) {
-    point_2d &point = render_queue.back();
-    if (point.x < width &&
-        point.x > 0 &&
-        point.y < height &&
-        point.y > 0 
-        ) {
-      _canvas[point.y][point.x] = 1;
-    }
-    render_queue.pop_back();
-  }
   while (!render_dequeue.empty()) {
     point_2d point = render_dequeue.back();
-    if (point.x < width &&
-        point.x > 0 &&
-        point.y < height &&
-        point.y > 0 
-        ) {
+    if (point.x < width && point.x > 0 && point.y < height && point.y > 0) {
       _canvas[point.y][point.x] = 0;
     }
     render_dequeue.pop_back();
+  }
+  while (!render_queue.empty()) {
+    point_2d &point = render_queue.back();
+    if (point.x < width && point.x > 0 && point.y < height && point.y > 0) {
+      _canvas[point.y][point.x] = 1;
+    }
+    render_queue.pop_back();
   }
   system("clear");
   std::stringstream screen_output;
@@ -158,31 +158,17 @@ void asciiCanvas::render() {
   for (int y_ind = 0; y_ind < height; ++y_ind) {
     for (int x_ind = 0; x_ind < width; ++x_ind) {
       if (_canvas[y_ind][x_ind] == 1) {
-        screen_output << "#";
+        screen_output << _populated_character;
         continue;
       }
-      screen_output << ".";
+      screen_output << _background_character;
     }
     screen_output << "\n";
   }
-  std::cout << screen_output.str() << "press y to exit" << std::endl;
+  std::cout << screen_output.str() << text_footer.str() << std::endl;
 }
+
 int main() {
-  // TODO get OS input to decide library to use
-
-  // POSIX (linux, mac) input happens by writing input data to a file
-  // your keyboard is literally /dev/input/event2 which is kinda nuts
-  const char *dev = "/dev/input/event2";
-
-  // file descriptors are an index in a table of every file
-  // linux currently has open and are used as basically
-  // a common language between all applications that access files
-  int file_dscrptr = open(dev, O_RDONLY);
-  if (file_dscrptr == -1) {
-    perror("Error opening device");
-    return 1;
-  }
-
   struct input_event event;
   Game generic_game;
 
@@ -190,24 +176,53 @@ int main() {
   int canvas_width = 80;
   char canvas_background = '.';
   char canvas_populated = '#';
-  asciiCanvas canvas(canvas_height,      // char height of ascii canvas
-                     canvas_width,       // char width of ascii canvas
-                     canvas_populated,   // inactive char
-                     canvas_background); // active char
+  asciiCanvas canvas(canvas_height, canvas_width, canvas_populated,
+                     canvas_background);
   int move_increment = 1;
   actorObj guy(generic_game, move_increment);
-  int guy_model_points[][2] = {{0, 0}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
-  point_model guy_model(guy_model_points, std::size(guy_model_points));
-  guy.model = &guy_model;
+
+  int guy_model_points[][2] = {{0, 0},  {0, 1},  {1, 0},  {1, 1},  {-1, 0},
+                               {0, -1}, {-1, 1}, {1, -1}, {-1, -1}};
+
+  guy.model = make_point_model(guy_model_points, std::size(guy_model_points));
   generic_game.canvas_instance = &canvas;
-  while (0 < read(file_dscrptr, // file descriptor
-                  &event,       // give the file data to the input event struct
-                  sizeof(struct input_event))) {
+
+  // ---- input setup ----
+  // TODO get OS input to decide library to use
+
+  // this is a buffer to read input from your keyboard via file_dscrptr
+  // because in POSIX compliant machines (mac linux) I/O is handled by 
+  // writing to a region of memory that programs interface with as if 
+  // it were a file. which is pretty cool lol.
+  const char *dev = "/dev/input/event2";
+
+  // file descriptors are an index in a table of every file
+  // linux currently has open and are used as basically
+  // a common language between all applications that access files
+
+  int file_dscrptr = open(dev, O_RDONLY);
+  if (file_dscrptr == -1) {
+    perror("Error opening device");
+    return 1;
+  }
+
+  // ---- main loop ----
+
+  while (true) {
+    bool getting_input =
+        0 < read(file_dscrptr, // file descriptor
+                 &event,       // give the file data to the input event struct
+                 sizeof(struct input_event));
+    if (!getting_input) {
+      break;
+    }
     if (event.type == EV_KEY) {
       guy.handle_player_input(event);
     }
     canvas.render();
   }
+
+  // cleanup
   close(file_dscrptr);
   return 0;
 }
