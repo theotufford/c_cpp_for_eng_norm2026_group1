@@ -3,4 +3,4 @@
 
 ## projects
 Our overarching goal is to make pvp wordle.
-### project 1: idek man
+### project 1: base wordle engine
