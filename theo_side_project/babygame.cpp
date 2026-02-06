@@ -28,6 +28,12 @@ struct vector_2d {
   friend bool operator==(vector_2d const &vec_a, vector_2d const &vec_b) {
     return vec_a.x == vec_b.x && vec_a.y == vec_b.y;
   };
+  friend vector_2d operator+(vector_2d const &vec_a, vector_2d const &vec_b) {
+    vector_2d outvec;
+    outvec.x = vec_a.x + vec_b.x;
+    outvec.y = vec_a.y + vec_b.y;
+    return outvec;
+  }
   vector_2d() : x(0), y(0), color_value(1) {}
   vector_2d(int x, int y) : x(x), y(y), color_value(1) {}
 };
@@ -47,9 +53,7 @@ template <> struct hash<vector_2d> {
   // non invertable
 };
 } // namespace std
-
-vector<vector_2d> make_point_model(int input_coords[][2], int point_count,
-                                   gameObj *collision_owner) {
+vector<vector_2d> make_point_model(int input_coords[][2], int point_count) {
   vector<vector_2d> points;
   // insane silent bug just fixed where not initializing vector index to 0
   // caused the loop to quit instantly and silently
@@ -58,7 +62,6 @@ vector<vector_2d> make_point_model(int input_coords[][2], int point_count,
     vector_2d point_tmp;
     point_tmp.x = input_coords[coord_index][0];
     point_tmp.y = input_coords[coord_index][1];
-    point_tmp.collision_owner = collision_owner;
     points.push_back(point_tmp);
   }
   return points;
@@ -68,21 +71,29 @@ class Game;
 
 class gameObj {
 public:
+  Game &owning_game;
   vector<vector_2d> model; // vector of 2d vectors relative to its
                            // transform that make up the body of the obj
-  int direction;           // cardinal direction
-  int move_increment;
   vector_2d current_position;
-  vector_2d prev_position;
-  Game &owning_game;
-  void update_render();
   void handle_collision(gameObj *colliding_object);
-  void abs_transform(vector_2d coords);
-  void delta_transform(vector_2d delta);
-  gameObj(Game &owning_game);
+  gameObj(Game &owning_game) : owning_game(owning_game) {}
+};
+class environment_object : public gameObj {
+public:
+  environment_object(Game &owning_game, int *points[2], vector_2d position);
 };
 
-class playerObj : public gameObj {
+// game object that can move
+class actorObj : public gameObj {
+public:
+  vector_2d prev_position;
+  void abs_transform(vector_2d coords);
+  void delta_transform(vector_2d delta);
+  actorObj(Game &owning_game);
+};
+
+// actor object that consumes player input
+class playerObj : public actorObj {
 public:
   void handle_player_input(input_event key_event);
   playerObj(Game &owning_game);
@@ -92,26 +103,28 @@ class asciiCanvas {
 private:
   const char _populated_character;
   const char _background_character;
+  const Game &_owning_game;
 
 public:
+  bool render_needed = true;
   int **int_map;
   const int height, width;
   void render();
-  unordered_set<vector_2d> rendered_in_this_loop;
-  vector<vector_2d> render_queue;
-  vector<vector_2d> render_dequeue;
+  unordered_set<vector_2d> rendered_points;
+  unordered_set<vector_2d> always_rendered; // environemnt objects
   void fill(int x_coord, int y_coord);
   void clear(int x_coord, int y_coord);
   stringstream text_footer;
-  asciiCanvas(                                      //
-      int height,                                   //
-      int width,                                    //
-      char populated_character,                     //
-      char background_character)                    //
-      : height(height), width(width),               //
-        _populated_character(populated_character),  //
-        _background_character(background_character) //
-  {                                                 //
+  asciiCanvas(                                                   //
+      Game &owning_game,                                         //
+      int height,                                                //
+      int width,                                                 //
+      char populated_character,                                  //
+      char background_character)                                 //
+      : _owning_game(owning_game), height(height), width(width), //
+        _populated_character(populated_character),               //
+        _background_character(background_character)              //
+  {                                                              //
     int_map = (int **)malloc(height * sizeof(int **));
     for (int y_ind = 0; y_ind < height; ++y_ind) {
       int_map[y_ind] = (int *)malloc(width * sizeof(int));
@@ -125,73 +138,50 @@ public:
 class Game {
 public:
   asciiCanvas *canvas_instance;
-  vector<gameObj *> objects; // interesting idea would be to order this by
-                             // position to optimize
+  actorObj *player_ptr;
+  vector<actorObj *> actor_ptrs;
+  vector<environment_object *> env_obj_ptrs;
+  // eventually start end goal scoring etc
 };
-
-gameObj::gameObj(Game &owning_game) : owning_game(owning_game) {
-  owning_game.objects.push_back(this);
-  update_render();
+void own_point_model(gameObj *collision_owner) {
+  for (vector_2d model_point : collision_owner->model) {
+    model_point.collision_owner = collision_owner;
+  }
 }
 
-playerObj::playerObj(Game &owning_game) : gameObj(owning_game) {};
+actorObj::actorObj(Game &owning_game) : gameObj(owning_game) {
+  owning_game.actor_ptrs.push_back(this);
+  prev_position = vector_2d(0, 0);
+}
+environment_object::environment_object(Game &owning_game, vector_2d position, vector<vector_2d> point_model)
+    : gameObj(owning_game){
+  model = point_model;
+  for (vector_2d model_point : model) {
+    model_point = model_point + current_position;
+  }
+  owning_game.env_obj_ptrs.push_back(this);
+}
+playerObj::playerObj(Game &owning_game) : actorObj(owning_game) {
+  owning_game.player_ptr = this;
+}
 
-// not working yet
 void gameObj::handle_collision(gameObj *colliding_object) {
   system("clear");
   cout << "center collision !!!" << std::endl;
   exit(EXIT_SUCCESS);
 }
 
-void gameObj::update_render() {
-  asciiCanvas *active_canvas = owning_game.canvas_instance;
-  active_canvas->text_footer.str("");
-  for (vector_2d model_vector : model) {
-    vector_2d abs_position;
-    abs_position.x = current_position.x + model_vector.x;
-    abs_position.y = current_position.y + model_vector.y;
-    if (active_canvas->rendered_in_this_loop.contains(abs_position)) {
-      active_canvas->text_footer << "colliding coords: " << abs_position.x
-                                 << abs_position.y << "\t";
-      gameObj colliding_entity =
-          *active_canvas->rendered_in_this_loop.find(abs_position)
-               ->collision_owner; // collision detected get colliding gameObj 
-      // calls the collision handler of this game obj
-      handle_collision(&colliding_entity);
-      // calls the collision handler of the other game obj
-      colliding_entity.handle_collision(this);
-      continue;
-    }
-    active_canvas->int_map[abs_position.y][abs_position.x] =
-        model_vector.color_value;
-    active_canvas->rendered_in_this_loop.insert(abs_position);
-  }
-  if (current_position == prev_position) { // no need to loop through a bunch of false cases
-    return;
-  }
-  for (vector_2d model_vector : model) {
-    vector_2d abs_position;
-    abs_position.x = prev_position.x + model_vector.x;
-    abs_position.y = prev_position.y + model_vector.y;
-    // dont remove points that another entity has activated
-    if (active_canvas->rendered_in_this_loop.contains(abs_position)) {
-      continue;
-    }
-    active_canvas->int_map[abs_position.y][abs_position.x] = 0;
-  }
-}
-
-void gameObj::abs_transform(vector_2d coords) {
+void actorObj::abs_transform(vector_2d coords) {
   prev_position = current_position;
   current_position = coords;
-  update_render();
+  owning_game.canvas_instance->render_needed = true;
 }
 
-void gameObj::delta_transform(vector_2d delta) {
+void actorObj::delta_transform(vector_2d delta) {
   prev_position = current_position;
   current_position.x += delta.x;
   current_position.y += delta.y;
-  update_render();
+  owning_game.canvas_instance->render_needed = true;
 }
 
 enum keybinds {
@@ -227,9 +217,42 @@ void playerObj::handle_player_input(input_event key_event) {
 // re-render the ascii canvas building a string stream to represent
 // the entire display and then printing it all at once assembled
 void asciiCanvas::render() {
-  system("clear");               // clear screen
-  rendered_in_this_loop.clear(); // clear render collision history
-  stringstream screen_output;    // actual rendered output sstream
+  for (environment_object *env_obj_ptr : _owning_game.env_obj_ptrs) {
+    // collision between environement objects is ignored
+    // and position is static so no calculations are needed
+    for (vector_2d model_vector : env_obj_ptr->model) {
+      int_map[model_vector.y][model_vector.x] = model_vector.color_value;
+    }
+  }
+  for (actorObj *actor_ptr : _owning_game.actor_ptrs) {
+    // iterate through points in object
+    for (vector_2d model_vector : actor_ptr->model) {
+      vector_2d abs_position;
+      vector_2d prev_abs_position;
+      abs_position.x = actor_ptr->current_position.x + model_vector.x;
+      abs_position.y = actor_ptr->current_position.y + model_vector.y;
+      prev_abs_position.x = actor_ptr->prev_position.x + model_vector.x;
+      prev_abs_position.y = actor_ptr->prev_position.y + model_vector.y;
+      int_map[prev_abs_position.y][prev_abs_position.x] = 0;
+      if (rendered_points.contains(abs_position)) { // collision detected
+        text_footer << "colliding coords: " << abs_position.x << abs_position.y
+                    << "\t";
+        // get colliding gameObj
+        gameObj colliding_entity =
+            *rendered_points.find(abs_position)->collision_owner;
+        // calls the collision handler of this game obj
+        actor_ptr->handle_collision(&colliding_entity);
+        // calls the collision handler of the other game obj
+        colliding_entity.handle_collision(actor_ptr);
+        continue;
+      }
+      int_map[abs_position.y][abs_position.x] = model_vector.color_value;
+      rendered_points.insert(abs_position);
+    }
+  }
+  system("clear");                   // clear screen
+  rendered_points = always_rendered; // clear actor render history
+  stringstream screen_output;        // actual rendered output sstream
   for (int y_ind = 0; y_ind < height; ++y_ind) {
     for (int x_ind = 0; x_ind < width; ++x_ind) {
       // scan entire canvas for 1s
@@ -243,6 +266,8 @@ void asciiCanvas::render() {
     screen_output << "\n";
   }
   cout << screen_output.str() << text_footer.str() << "\ny to quit" << endl;
+  render_needed = false;
+  return;
 }
 
 int main() {
@@ -255,8 +280,8 @@ int main() {
   int canvas_width = 80;
   char canvas_background = '.';
   char canvas_populated = '@';
-  asciiCanvas canvas(canvas_height, canvas_width, canvas_populated,
-                     canvas_background);
+  asciiCanvas canvas(generic_game, canvas_height, canvas_width,
+                     canvas_populated, canvas_background);
   generic_game.canvas_instance = &canvas;
 
   // ---- player setup ----
@@ -268,10 +293,9 @@ int main() {
   guy.model = make_point_model(guy_model_points, size(guy_model_points), &guy);
 
   // ---- game obstacle setup ----
-  gameObj brick_wall(generic_game);
-  vector_2d wall_center = vector_2d(10, 10);
-  brick_wall.current_position = wall_center;
   int wall_model_points[][2] = {
+      // i probably should make a function to connect nodes with edges
+      // but for now the 2d array of doom
       {0, 0}, {0, 1}, {0, 2},  {0, 3},  {0, 4},  {0, 5},  {0, 6},  {0, 7},
       {0, 8}, {0, 9}, {0, 10}, {0, 11}, {0, 12}, {0, 13}, {0, 14}, {0, 15},
       {1, 0}, {1, 1}, {1, 2},  {1, 3},  {1, 4},  {1, 5},  {1, 6},  {1, 7},
@@ -293,9 +317,12 @@ int main() {
       {9, 0}, {9, 1}, {9, 2},  {9, 3},  {9, 4},  {9, 5},  {9, 6},  {9, 7},
       {9, 8}, {9, 9}, {9, 10}, {9, 11}, {9, 12}, {9, 13}, {9, 14}, {9, 15},
   };
-
+  environment_object brick_wall(generic_game);
+  // this is all weird because of the sizing restrictions and stuff
   brick_wall.model =
       make_point_model(wall_model_points, size(wall_model_points), &brick_wall);
+  vector_2d wall_center = vector_2d(10, 10);
+  brick_wall.current_position = wall_center;
 
   // ---- input setup ----
   // TODO get OS input to decide library to use
@@ -318,7 +345,6 @@ int main() {
 
   // ---- main loop ----
 
-  brick_wall.update_render();
   while (true) {
     bool getting_input =
         0 < read(file_dscrptr, // file descriptor
@@ -330,7 +356,9 @@ int main() {
     if (event.type == EV_KEY) {
       guy.handle_player_input(event);
     }
-    canvas.render();
+    if (canvas.render_needed) {
+      canvas.render();
+    }
   }
 
   // cleanup
