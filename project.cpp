@@ -6,50 +6,97 @@
 
 using namespace std;
 
-// Setting up board to have 6 rows and 5 columns for the tries(6) and word
-// length(5)
-const int guess_max = 6;
-const int secret_length = 5;
+/* ANSI escape codes
+   Tells the terminal to change the background to a differet color using ANSI
+   Escape Codes
+   \033 is command and tells it what comes next is a special character, [
+   starts the sequence numbers like 42 tell it to choose green background
+   while the m ends the command sequence Always end with reset ANSI code to
+   reset the color back to normal
+*/
 
-// Tells the terminal to change the background to a differet color using ANSI
-// Escape Codes
-// \033 is command and tells it what comes next is a special character, [ starts
-// the sequence numbers like 42 tell it to choose green background while the m
-// ends the command sequence Always end with reset ANSI code to reset the color
-// back to normal
+class Board {
+public:
+  const int guess_max = 6;
+  const int secret_length = 5;
+  // ANSI color escape codes associated with their meaning
+  string correct = "\033[42m";   // 42 - green background
+  string contained = "\033[43m"; // 43 - yellow background
+  string wrong = "\033[100m";    // 100 - bright black background
 
-const string white = "\033[47m";          // 47 - white background
-const string correct = "\033[42m";          // 42 - green background
-const string contained = "\033[43m";         // 43 - yellow background
-const string wrong = "\033[100m";          // 100 -bright black background
-const string dark_text_code = "\033[30m"; // 30 - black text (in the foreground)
-const string reset_code = "\033[0m";      // 0 - reset (styles and colors)
+  const string white = "\033[47m";     // 47 - white background
+  const string dark_text = "\033[30m"; // 30 - black text (in the foreground)
+  const string reset_code = "\033[0m"; // 0 - reset (styles and colors)
+
+  vector<string> history;
+  string secret;
+  void printBoard();
+  vector<string> get_guess_colors(string guess);
+  void board_test();
+  void toggle_colorblind();
+};
+
+void Board::toggle_colorblind(){
+  correct = "\033[0;107m";   // - high inensity white
+  contained = "\033[0;104m"; // - high inensity cyan
+}
+
+vector<string> Board::get_guess_colors(string guess) {
+  vector<string> color_map;
+  /*
+  input: guess string
+
+  return:
+  vector of strings that encode the color of the tile at the
+  same index in the guess string
+
+  the colors are encoded as strings, hence the output vector being a vector of
+  strings
+
+  */
+
+  // FOR EXAMPLE/TESTING:
+  // (declared in the board test function)
+  // secret = apple
+  // guess_history = {"plume", "beeps"};
+  color_map = {contained, contained, wrong, wrong, correct}; // correct for plume
+
+  // on successful design it should output the color map for the second guess as
+  // {wrong, contained, contained, contained, wrong }
+
+  // freindly error check
+  if (color_map.size() != secret_length) {
+    cout << "\n    error!!!"
+         << "\n color map generated was the wrong length (" << color_map.size()
+         << ")!\nit should have been " << secret_length << "characters long"
+         << endl;
+  }
+  return color_map;
+}
 
 // Print the board
-void printBoard(vector<string> guess_history,
-                vector<vector<string>> color_coding) {
+void Board::printBoard() {
   cout << "\n";
   // iterate through every tile on board
-  for (int guess_hist_ind = 0; guess_hist_ind < guess_max; guess_hist_ind++) {
+  // if guesses remaining to be rendered
+  // get string in guess history and its corresponding color coding
+  // iterate through guess string
+  // get individual letter and its color coding
+  // print tile to the screen
 
-    // if guesses remaining to be rendered
-    if (guess_hist_ind < guess_history.size()) {
+  for (int board_row = 0; board_row < guess_max; board_row++) {
 
-      // get string in guess history and its corresponding color coding
-      string guess_string = guess_history.at(guess_hist_ind);
-      vector<string> guess_color_map = color_coding.at(guess_hist_ind);
+    if (board_row < history.size()) {
 
-      // iterate through guess string
-      for (int guess_ind = 0; guess_ind < secret_length; guess_ind++) {
+      string guess = history.at(board_row);
+      vector<string> guess_colors = get_guess_colors(guess);
 
-        // get individual letter and its color coding
-        char letter = guess_string.at(guess_ind);
-        string ansi_color_code = guess_color_map.at(guess_ind);
+      for (int letter_ind = 0; letter_ind < secret_length; letter_ind++) {
+        char letter = guess.at(letter_ind);
+        string color_code = guess_colors.at(letter_ind);
 
-
-        // print letter to the screen
-        cout << ansi_color_code << dark_text_code << " "
-             << (char)toupper(letter) << " " << reset_code << " ";
+        cout << color_code << dark_text << " " << (char)toupper(letter)
+             << " " << reset_code << " ";
       }
 
     } else {
@@ -62,31 +109,25 @@ void printBoard(vector<string> guess_history,
   }
 }
 
-// test to see if board works
-int board_test() {
-  vector<string> guess_history_test = {"crane", "slate"};
-  vector<vector<string>> color_coding_test = {
-      {contained, correct, correct, wrong, correct}, {contained, wrong, wrong, wrong, correct}};
-  printBoard(guess_history_test, color_coding_test);
-  return 0;
+// test board rendering
+void Board::board_test() {
+  cout << "testing board rendering: " << endl;
+  secret = "apple";
+  history = {"plume", "beeps"};
+  printBoard();
+
+  // blocking input stall
+  int tmp;
+  cin >> tmp;
 }
 
 int main() {
-  cout << "testing board rendering: " << endl;
-  board_test();
-  int tmp;
-  cin >> tmp;
-  system("clear");
+  Board(player2_board);
 
-  // variable setup
-  vector<string> player1_guess_history;
-  vector<string> player2_guess_history;
+  player2_board.toggle_colorblind();
+  player2_board.board_test();
 
-  string player1_secret = "";
-  string player2_secret = "";
-
-  int player1_score = 0;
-  int player2_score = 0;
-
-  // main loop
+  Board(player3_board);
+  player3_board.toggle_colorblind();
+  player3_board.board_test();
 }
