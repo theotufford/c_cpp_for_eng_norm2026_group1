@@ -43,28 +43,23 @@ void Board::toggle_colorblind(){
 
 vector<string> Board::get_guess_colors(string guess) {
   vector<string> color_map;
-  /*
-  input: guess string
-
-  return:
-  vector of strings that encode the color of the tile at the
-  same index in the guess string
-
-  the colors are encoded as strings, hence the output vector being a vector of
-  strings
-
-  */
-
-  // FOR EXAMPLE/TESTING:
-  // (declared in the board test function)
-  // secret = apple
-  // guess_history = {"plume", "beeps"};
-  color_map = {contained, contained, wrong, wrong, correct}; // correct for plume
-
-  // on successful design it should output the color map for the second guess as
-  // {wrong, contained, contained, contained, wrong }
-
-  // freindly error check
+  
+  for(int position = 0; secret.size() > position; position++) { // define vars and conditions to let us itterate through secret
+    char guess_char = guess.at(position);
+    if(secret.at(position) == guess_char) {                     // is the letter at position of guess the same as the letter in sectet at position
+      color_map.push_back(correct);                             // if it is push correct to the end of color_map 
+    } 
+    else {                                                      // if it is not check if the letter at position appears in the word at all
+      for(int A = 0; secret.size() > A; A++) {                  // define vars and conditions to let us itterate through secret again
+        if(secret.at(A) == guess_char) {                        // is the letter at p in guess in the word at A?     
+          color_map.push_back(contained);                       // push 'containned' to the end of the color_map vector 
+        }                                                        
+      else {                                                    // if letter at p does not appear?
+        color_map.push_back(wrong);                             // push 'wrong" to the end of color_map
+      } 
+      }
+    }
+  }
   if (color_map.size() != secret_length) {
     cout << "\n    error!!!"
          << "\n color map generated was the wrong length (" << color_map.size()
