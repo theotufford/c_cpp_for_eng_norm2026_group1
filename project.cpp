@@ -31,14 +31,15 @@ public:
   vector<string> history;
   string secret;
   void printBoard();
+  void printHelp();
   vector<string> get_guess_colors(string guess);
   void board_test();
   void toggle_colorblind();
 };
 
 void Board::toggle_colorblind(){
-  correct = "\033[0;107m";   // - high inensity white
-  contained = "\033[0;104m"; // - high inensity cyan
+  correct = "\033[0;107m";   // - high intensity white
+  contained = "\033[0;104m"; // - high intensity cyan
 }
 
 vector<string> Board::get_guess_colors(string guess) {
@@ -109,6 +110,35 @@ void Board::printBoard() {
   }
 }
 
+void Board::printHelp() {
+  string bold = "\033[1m";
+  string reset_code = "\033[0m";
+
+  cout << "\n";
+    cout << bold << "╔═══════════════════════════════════════════════════╗" << reset_code << "\n";
+    cout << bold << "║                     HELP MENU                     ║" << reset_code << "\n";
+    cout << bold << "╠═══════════════════════════════════════════════════╣" << reset_code << "\n";
+    cout << bold << "║                                                   ║" << reset_code << "\n";
+    cout << bold << "║                    How To Play                    ║" << reset_code << "\n";
+    cout << bold << "║                                                   ║" << reset_code << "\n";
+    cout << bold << "║  Guess the Wordle in 6 tries.                     ║" << reset_code << "\n";
+    cout << bold << "║                                                   ║" << reset_code << "\n";
+    cout << bold << "║   •  Each guess must be a valid 5-letter word.    ║" << reset_code << "\n";
+    cout << bold << "║   •  The color of the tiles will change to show;  ║" << reset_code << "\n";
+    cout << bold << "║       how close your guess was to the word.       ║" << reset_code << "\n";
+    cout << bold << "║                                                   ║" << reset_code << "\n";
+    cout << bold << "║  After each guess, tiles show:                    ║" << reset_code << "\n";
+    cout << "║  "<< correct << dark_text << " A " << reset_code << " Correct spot                                 ║" << reset_code << "\n";
+    cout << "║  "<< contained << dark_text << " B " << reset_code << " Wrong spot                                   ║" << reset_code << "\n";
+    cout << "║  "<< wrong << dark_text << " C " << reset_code << " Not in the word                              ║" << reset_code << "\n";
+    cout << bold << "║                                                   ║" << reset_code << "\n";
+    cout << bold << "║                                                   ║" << reset_code << "\n";
+    cout << bold << "║  Enter '?' anytime for this menu.                 ║" << reset_code << "\n";
+    cout << bold << "╚═══════════════════════════════════════════════════╝" << reset_code << "\n";
+
+
+}
+
 // test board rendering
 void Board::board_test() {
   cout << "testing board rendering: " << endl;
@@ -122,12 +152,30 @@ void Board::board_test() {
 }
 
 int main() {
-  Board(player2_board);
+  char choice;
+  string bold = "\033[1m";
+  string reset = "\033[0m";
+   
+  cout << "\n";
+    cout << bold << "╔═══════════════════════════════╗" << reset << "\n";
+    cout << bold << "║            WORDLE             ║" << reset << "\n";
+    cout << bold << "╚═══════════════════════════════╝" << reset << "\n\n";
+
+  cout << "Enter a word or ? for help: ";
+  cin >> choice;
+  if(choice == '?') {
+    Board board;
+    board.printHelp();
+  }
+
+  Board (player2_board);
 
   player2_board.toggle_colorblind();
   player2_board.board_test();
 
-  Board(player3_board);
+  Board (player3_board);
   player3_board.toggle_colorblind();
   player3_board.board_test();
+
 }
+
