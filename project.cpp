@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -43,23 +44,40 @@ void Board::toggle_colorblind(){
 
 vector<string> Board::get_guess_colors(string guess) {
   vector<string> color_map;
+    
+
+map<char, int> letter_counts; // map is form the data library, ai reccomended it for mapping values to characters
+
   
-  for(int position = 0; secret.size() > position; position++) { // define vars and conditions to let us itterate through secret
+  for (int i = 0; i < secret.size(); i++) { //create a key of values with the number of times each letter appears in secret
+  letter_counts[secret.at(i)] ++;
+  }
+
+  for(int position = 0; secret.size() > position; position++) { 
     char guess_char = guess.at(position);
-    if(secret.at(position) == guess_char) {                     // is the letter at position of guess the same as the letter in sectet at position
-      color_map.push_back(correct);                             // if it is push correct to the end of color_map 
-    } 
-    else {                                                      // if it is not check if the letter at position appears in the word at all
-      for(int A = 0; secret.size() > A; A++) {                  // define vars and conditions to let us itterate through secret again
-        if(secret.at(A) == guess_char) {                        // is the letter at p in guess in the word at A?     
-          color_map.push_back(contained);                       // push 'containned' to the end of the color_map vector 
-        }                                                        
-      else {                                                    // if letter at p does not appear?
-        color_map.push_back(wrong);                             // push 'wrong" to the end of color_map
-      } 
+
+    if(secret.at(position) == guess_char) {                     
+      color_map.push_back(correct);
+      letter_counts[guess.at(position)] --;
+
+    } else {
+      color_map.push_back(wrong); 
+
+      for (int p_wrong = 0; secret.size() > p_wrong; p_wrong++) {
+
+        if (guess_char == secret.at(p_wrong)) {
+        letter_counts[guess.at(position)] --;
+
+          if (letter_counts[guess.at(position)] >= 0) {
+            color_map.at(position) = contained;
+            }
+          }
+        }
       }
     }
-  }
+  
+
+  
   if (color_map.size() != secret_length) {
     cout << "\n    error!!!"
          << "\n color map generated was the wrong length (" << color_map.size()
@@ -108,7 +126,7 @@ void Board::printBoard() {
 void Board::board_test() {
   cout << "testing board rendering: " << endl;
   secret = "apple";
-  history = {"plume", "beeps"};
+  history = {"beeps", "farss"};
   printBoard();
 
   // blocking input stall
