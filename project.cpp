@@ -109,7 +109,7 @@ void Board::printBoard() {
     cout << "\n\n";
   }
 }
-
+// print the help menu using ANSI escape codes
 void Board::printHelp() {
   string bold = "\033[1m";
   string reset_code = "\033[0m";
@@ -152,15 +152,18 @@ void Board::board_test() {
 }
 
 int main() {
-  char choice;
+
+  // title of game
   string bold = "\033[1m";
   string reset = "\033[0m";
    
   cout << "\n";
-    cout << bold << "╔═══════════════════════════════╗" << reset << "\n";
-    cout << bold << "║            WORDLE             ║" << reset << "\n";
-    cout << bold << "╚═══════════════════════════════╝" << reset << "\n\n";
+  cout << bold << "╔═══════════════════════════════╗" << reset << "\n";
+  cout << bold << "║            WORDLE             ║" << reset << "\n";
+  cout << bold << "╚═══════════════════════════════╝" << reset << "\n\n";
 
+  // asks input from player to display help menu
+  char choice;
   cout << "Enter a word or ? for help: ";
   cin >> choice;
   if(choice == '?') {
