@@ -4,8 +4,9 @@
 #include <string>
 #include <vector>
 #include <map>
-
 using namespace std;
+
+
 
 /* ANSI escape codes
    Tells the terminal to change the background to a differet color using ANSI
@@ -25,9 +26,9 @@ public:
   string contained = "\033[43m"; // 43 - yellow background
   string wrong = "\033[100m";    // 100 - bright black background
 
-  const string white = "\033[47m";     // 47 - white background
-  const string dark_text = "\033[30m"; // 30 - black text (in the foreground)
-  const string reset_code = "\033[0m"; // 0 - reset (styles and colors)
+  string white = "\033[47m";     // 47 - white background
+  string dark_text = "\033[30m"; // 30 - black text (in the foreground)
+  string reset_code = "\033[0m"; // 0 - reset (styles and colors)
 
   vector<string> history;
   string secret;
@@ -36,7 +37,17 @@ public:
   vector<string> get_guess_colors(string guess);
   void board_test();
   void toggle_colorblind();
+  void toggle_WindowsDisplay();
 };
+
+// replaces ANSI escape codes with plain text markers for windowsOs
+void Board::toggle_WindowsDisplay(){
+  correct = "correct";
+  contained = "contained";
+  wrong = "wrong";
+  dark_text = "";
+  reset_code = "";
+}
 
 void Board::toggle_colorblind(){
   correct = "\033[0;107m";   // - high intensity white
