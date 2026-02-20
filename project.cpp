@@ -50,8 +50,8 @@ void Board::toggle_colorblind() {
 }
 
 int Board::verify_input() {
-  // check word length
   // check against wordlist
+  // check word length
   return 0;
 };
 
@@ -180,7 +180,13 @@ void Board::printHelp() {
        << reset_code << "\n";
 }
 
-void stall() {}
+void stall() {
+  string trash;
+  cin.clear();
+  cin.ignore();
+  cout << "Enter to continue..." << endl;
+  getline(cin, trash);
+}
 
 // test board rendering
 void Board::board_test() {
@@ -189,9 +195,7 @@ void Board::board_test() {
   guess_history = {"beeps", "farss"};
   printBoard();
 
-  // blocking input stall
-  int tmp;
-  cin >> tmp;
+  stall();
 }
 
 int main() {
