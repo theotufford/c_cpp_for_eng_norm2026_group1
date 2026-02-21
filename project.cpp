@@ -37,16 +37,27 @@ public:
   vector<string> get_guess_colors(string guess);
   void board_test();
   void toggle_colorblind();
-  void toggle_WindowsDisplay();
+  void toggle_windowsDisplay();
 };
 
-// replaces ANSI escape codes with plain text markers for windowsOs
-void Board::toggle_WindowsDisplay(){
-  correct = "correct";
-  contained = "contained";
-  wrong = "wrong";
-  dark_text = "";
-  reset_code = "";
+// Windows terminal(powershell) does not support ANSI codes so plain text instead
+void Board::toggle_windowsDisplay(){
+
+  if (windowsDisplay) {
+    // Plain text for windowsOS instead of ANSI
+    correct = "correct";
+    contained = "contained";
+    wrong = "wrong";
+    dark_text = "";
+    reset_code = "";
+  } else {
+    // ANSI mode for macOS/linux
+      correct = "\033[42m";   // 42 - green background
+      contained = "\033[43m"; // 43 - yellow background
+      wrong = "\033[100m";    // 100 - bright black background
+      dark_text = "\033[30m"; // 30 - black text (in the foreground)
+      reset_code = "\033[0m"; // 0 - reset (styles and colors)
+  }
 }
 
 void Board::toggle_colorblind(){
@@ -120,8 +131,12 @@ void Board::printBoard() {
         char letter = guess.at(letter_ind);
         string color_code = guess_colors.at(letter_ind);
 
+        if(windowsDisplay){
+          cout << (char)toupper(letter) << " [" << color_code << "] ";
+        } else {
         cout << color_code << dark_text << " " << (char)toupper(letter)
              << " " << reset_code << " ";
+            }
       }
 
     } else {
