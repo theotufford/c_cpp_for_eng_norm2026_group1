@@ -1,11 +1,75 @@
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
+// if this were changed there would need to be a new valid word list file added
+#define GAME_LENGTH 5
+#define GUESS_MAX 6
+
 using namespace std;
+
+unordered_set<string> valid_word_set;
+unordered_set<string> valid_guess_set;
+
+int populate_word_set() {
+  ifstream file("wordlist.txt");
+  if (!file) {
+    cerr << "Unable to open file wordlist.txt" << endl;
+    return 1;
+  }
+  string valid_word;
+  while (getline(file, valid_word)) {
+    valid_word_set.insert(valid_word);
+  }
+  return 0;
+}
+
+int populate_guess_set() {
+  ifstream file("valid_guesses.txt");
+  if (!file) {
+    cerr << "Unable to open file valid_guesses.txt" << endl;
+    return 1;
+  }
+  string valid_word;
+  while (getline(file, valid_word)) {
+    valid_guess_set.insert(valid_word);
+  }
+  return 0;
+}
+
+int verify_secret(string input) {
+  // return a fail if input is the wrong length
+  if (input.length() != GAME_LENGTH) {
+    return 1;
+  }
+  // find the input string in the valid word set
+  auto wordset_iter = valid_word_set.find(input);
+  // if the iterator is the end of the set the
+  // input wasnt found so return a fail
+  if (wordset_iter == valid_word_set.end()) {
+    return 1;
+  }
+  return 0;
+};
+int verify_guess(string input) {
+  // return a fail if input is the wrong length
+  if (input.length() != GAME_LENGTH) {
+    return 1;
+  }
+  // find the input string in the valid word set
+  auto wordset_iter = valid_guess_set.find(input);
+  // if the iterator is the end of the set the
+  // input wasnt found so return a fail
+  if (wordset_iter == valid_guess_set.end()) {
+    return 1;
+  }
+  return 0;
+};
 
 /* ANSI escape codes
    Tells the terminal to change the background to a differet color using ANSI
@@ -18,8 +82,6 @@ using namespace std;
 
 class Board {
 public:
-  static const int guess_max = 6;
-  static const int game_length = 5;
   // ANSI color escape codes associated with their meaning
   string correct = "\033[42m";   // 42 - green background
   string contained = "\033[43m"; // 43 - yellow background
@@ -41,19 +103,12 @@ public:
   vector<string> get_guess_colors(string guess);
   void board_test();
   void toggle_colorblind();
-  int verify_input();
 };
 
 void Board::toggle_colorblind() {
   correct = "\033[0;107m";   // - high intensity white
   contained = "\033[0;104m"; // - high intensity cyan
 }
-
-int Board::verify_input() {
-  // check against wordlist
-  // check word length
-  return 0;
-};
 
 vector<string> Board::get_guess_colors(string guess) {
   vector<string> color_map;
@@ -87,10 +142,10 @@ vector<string> Board::get_guess_colors(string guess) {
     }
   }
 
-  if (color_map.size() != game_length) {
+  if (color_map.size() != GAME_LENGTH) {
     cout << "\n    error!!!"
          << "\n color map generated was the wrong length (" << color_map.size()
-         << ")!\nit should have been " << game_length << "characters long"
+         << ")!\nit should have been " << GAME_LENGTH << "characters long"
          << endl;
   }
   return color_map;
@@ -106,13 +161,13 @@ void Board::printBoard() {
   // get individual letter and its color coding
   // print tile to the screen
 
-  for (int board_row = 0; board_row < guess_max; board_row++) {
+  for (int board_row = 0; board_row < GUESS_MAX; board_row++) {
     if (board_row < guess_history.size()) {
 
       string guess = guess_history.at(board_row);
       vector<string> guess_colors = get_guess_colors(guess);
 
-      for (int letter_ind = 0; letter_ind < game_length; letter_ind++) {
+      for (int letter_ind = 0; letter_ind < GAME_LENGTH; letter_ind++) {
         char letter = guess.at(letter_ind);
         string color_code = guess_colors.at(letter_ind);
 
@@ -122,7 +177,7 @@ void Board::printBoard() {
 
     } else {
       // fill the rest of the board with gray empty tiles
-      for (int letter_ind = 0; letter_ind < game_length; letter_ind++) {
+      for (int letter_ind = 0; letter_ind < GAME_LENGTH; letter_ind++) {
         cout << wrong << "   " << reset_code << " ";
       }
     }
@@ -200,6 +255,10 @@ void Board::board_test() {
 
 int main() {
 
+  // generate valid word set from text file
+  populate_word_set();
+  populate_guess_set();
+
   // title of game
   string bold = "\033[1m";
   string reset = "\033[0m";
@@ -211,7 +270,7 @@ int main() {
 
   // asks input from player to display help menu
   char choice;
-  cout << "Enter a word or ? for help: ";
+  cout << "enter ? for help: ";
   cin >> choice;
   if (choice == '?') {
     Board board;
@@ -271,14 +330,19 @@ int main() {
     // then continue and swap boards
     if (opponent.secret == "") {
       cout << "input secret word for your opponent: ";
-      string tmp;
-      cin >> tmp;
-      cout << endl;
-      // validate tmp
-      opponent.secret = tmp;
+      // loop until valid input given
+      while (true) {
+        string tmp;
+        cin >> tmp;
+        cout << endl;
+        if (verify_secret(tmp) == 0) {
+          opponent.secret = tmp;
+          break;
+        }
+        cout << "not a valid word choice!!" << endl;
+      }
       continue;
     }
-
     active_board.printBoard();
     string guess;
     while (true) {
@@ -286,21 +350,18 @@ int main() {
       cout << "input guess: ";
       cin >> guess;
       cout << endl;
-      if (guess.length() == Board::game_length) {
+      if (verify_guess(guess) == 0) {
         break;
       }
-      // TODO validate against word list
-      cout << "not " << Board::game_length << " letters !" << endl;
+      cout << "not a valid guess :(" << endl;
     }
-
-    // TODO validate guess for length and wordlist
 
     active_board.guess_history.push_back(guess);
     active_board.guess_counter++;
     system("clear");
     active_board.printBoard();
-    bool out_of_guesses = opponent.guess_counter == Board::guess_max &&
-                          active_board.guess_counter == Board::guess_max;
+    bool out_of_guesses = opponent.guess_counter == GUESS_MAX &&
+                          active_board.guess_counter == GUESS_MAX;
     // check if guess is secret
     if (guess == active_board.secret) {
       cout << "word guessed, got point!!" << endl;
