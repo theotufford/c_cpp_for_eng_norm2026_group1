@@ -4,8 +4,9 @@
 #include <map>
 #include <string>
 #include <vector>
-
 using namespace std;
+
+
 
 /* ANSI escape codes
    Tells the terminal to change the background to a differet color using ANSI
@@ -25,9 +26,9 @@ public:
   string contained = "\033[43m"; // 43 - yellow background
   string wrong = "\033[100m";    // 100 - bright black background
 
-  const string white = "\033[47m";     // 47 - white background
-  const string dark_text = "\033[30m"; // 30 - black text (in the foreground)
-  const string reset_code = "\033[0m"; // 0 - reset (styles and colors)
+  string white = "\033[47m";     // 47 - white background
+  string dark_text = "\033[30m"; // 30 - black text (in the foreground)
+  string reset_code = "\033[0m"; // 0 - reset (styles and colors)
 
   Board *opponent;
   int guess_counter = 0;
@@ -41,10 +42,30 @@ public:
   vector<string> get_guess_colors(string guess);
   void board_test();
   void toggle_colorblind();
-  int verify_input();
+  void toggle_windowsDisplay();
 };
 
-void Board::toggle_colorblind() {
+// Windows terminal(powershell) does not support ANSI codes so plain text instead
+void Board::toggle_windowsDisplay(){
+
+  if (windowsDisplay) {
+    // Plain text for windowsOS instead of ANSI
+    correct = "correct";
+    contained = "contained";
+    wrong = "wrong";
+    dark_text = "";
+    reset_code = "";
+  } else {
+    // ANSI mode for macOS/linux
+      correct = "\033[42m";   // 42 - green background
+      contained = "\033[43m"; // 43 - yellow background
+      wrong = "\033[100m";    // 100 - bright black background
+      dark_text = "\033[30m"; // 30 - black text (in the foreground)
+      reset_code = "\033[0m"; // 0 - reset (styles and colors)
+  }
+}
+
+void Board::toggle_colorblind(){
   correct = "\033[0;107m";   // - high intensity white
   contained = "\033[0;104m"; // - high intensity cyan
 }
@@ -116,8 +137,12 @@ void Board::printBoard() {
         char letter = guess.at(letter_ind);
         string color_code = guess_colors.at(letter_ind);
 
-        cout << color_code << dark_text << " " << (char)toupper(letter) << " "
-             << reset_code << " ";
+        if(windowsDisplay){
+          cout << (char)toupper(letter) << " [" << color_code << "] ";
+        } else {
+        cout << color_code << dark_text << " " << (char)toupper(letter)
+             << " " << reset_code << " ";
+            }
       }
 
     } else {
