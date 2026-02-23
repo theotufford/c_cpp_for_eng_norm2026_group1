@@ -6,6 +6,12 @@
 #include <vector>
 using namespace std;
 
+#if defined(_WIN32) || defined(_WIN64)
+#define IS_WIN true
+#else
+#define IS_WIN false
+#endif
+
 
 
 /* ANSI escape codes
@@ -35,20 +41,19 @@ public:
   int points = 0;
   vector<string> guess_history;
   string secret;
-  // added this to use in coloring logic and to show what letters are remaining
+  // added to use in a second board that shows used and unused letters
   string letters_remaining = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   void printBoard();
   void printHelp();
   vector<string> get_guess_colors(string guess);
   void board_test();
   void toggle_colorblind();
-  void toggle_windowsDisplay();
+  Board();
 };
 
 // Windows terminal(powershell) does not support ANSI codes so plain text instead
-void Board::toggle_windowsDisplay(){
-
-  if (windowsDisplay) {
+Board::Board(){
+  if (IS_WIN) {
     // Plain text for windowsOS instead of ANSI
     correct = "correct";
     contained = "contained";
@@ -69,12 +74,6 @@ void Board::toggle_colorblind(){
   correct = "\033[0;107m";   // - high intensity white
   contained = "\033[0;104m"; // - high intensity cyan
 }
-
-int Board::verify_input() {
-  // check against wordlist
-  // check word length
-  return 0;
-};
 
 vector<string> Board::get_guess_colors(string guess) {
   vector<string> color_map;
@@ -137,7 +136,7 @@ void Board::printBoard() {
         char letter = guess.at(letter_ind);
         string color_code = guess_colors.at(letter_ind);
 
-        if(windowsDisplay){
+        if(IS_WIN){
           cout << (char)toupper(letter) << " [" << color_code << "] ";
         } else {
         cout << color_code << dark_text << " " << (char)toupper(letter)
