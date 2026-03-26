@@ -53,34 +53,36 @@ int Board::verify_input() {
   // check against wordlist
   // check word length
   return 0;
-};
+}
 
 vector<string> Board::get_guess_colors(string guess) {
   vector<string> color_map;
-  map<char, int> letter_counts; // map is form the data library, ai reccomended
-                                // it for mapping values to characters
+    
 
-  for (int i = 0; i < secret.size(); i++) {
-    letter_counts[secret.at(i)]++;
-  }
+map<char, int> letter_counts; // map is form the data library, a character value is mapped to a respective int value 
 
-  for (int position = 0; secret.size() > position; position++) {
-    char guess_char = guess.at(position);
+  
+  for (int i = 0; i < secret.size(); i++) { // itterate through secret 
+  letter_counts[secret.at(i)] ++;           // map will create a character vlaue for whatever letter secret contains at i and incremecnt it's int value by one, 
+  }                                         // by the end letter_counts should contain a count of each letter in secret 
 
-    if (secret.at(position) == guess_char) {
-      color_map.push_back(correct);
-      letter_counts[guess.at(position)]--;
+  for (int position = 0; secret.size() > position; position++) {// itterate through secret
+    char guess_char = guess.at(position);                       // temp var to keep track of shit 
+
+    if(secret.at(position) == guess_char) { // check if the letter at position in secret and guess are the same                     
+      color_map.push_back(correct);         // add correct to the colormap vector
+      letter_counts[guess.at(position)] --; // decrement the count of the letter we just guessed in letter_count. this keeps the (contians) logic from getting off by 1 errors
 
     } else {
-      color_map.push_back(wrong);
+      color_map.push_back(wrong); // add wrong to colormap just to put a value there so we can use .at for this position, we will change it later if its contained.
 
-      for (int p_wrong = 0; secret.size() > p_wrong; p_wrong++) {
+      for (int p_wrong = 0; secret.size() > p_wrong; p_wrong++) { // itterate through the secret again, we should by now know that guess @ p != secret @ p
 
-        if (guess_char == secret.at(p_wrong)) {
-          letter_counts[guess.at(position)]--;
+        if (guess_char == secret.at(p_wrong)) {  // if the guess is the same as secret at p_wrong  
+        letter_counts[guess.at(position)] --;    // decrement the count of the letter we just guessed in letter_count.
 
-          if (letter_counts[guess.at(position)] >= 0) {
-            color_map.at(position) = contained;
+          if (letter_counts[guess.at(position)] >= 0) { // check if the letter were checking has any remaining instances in letter_counts
+            color_map.at(position) = contained; // if it does replace wrong with contained.
           }
         }
       }
