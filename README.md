@@ -28,5 +28,3 @@ on a correct guess give point to board owner and clear the guess history. then p
 attach guess to guess history
 use guess history to render wordle board
 pass the turn to the other player and repeat all of this
-
-sean is here  
