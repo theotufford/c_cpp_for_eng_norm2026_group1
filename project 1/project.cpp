@@ -57,32 +57,49 @@ int Board::verify_input() {
 
 vector<string> Board::get_guess_colors(string guess) {
   vector<string> color_map;
-    
 
-map<char, int> letter_counts; // map is form the data library, a character value is mapped to a respective int value 
+  map<char, int> letter_counts; // map is form the data library, a character
+                                // value is mapped to a respective int value
 
-  
-  for (int i = 0; i < secret.size(); i++) { // itterate through secret 
-  letter_counts[secret.at(i)] ++;           // map will create a character vlaue for whatever letter secret contains at i and incremecnt it's int value by one, 
-  }                                         // by the end letter_counts should contain a count of each letter in secret 
+  for (int i = 0; i < secret.size(); i++) { // itterate through secret
+    letter_counts[secret.at(
+        i)]++; // map will create a character vlaue for whatever letter secret
+               // contains at i and incremecnt it's int value by one,
+  } // by the end letter_counts should contain a count of each letter in secret
 
-  for (int position = 0; secret.size() > position; position++) {// itterate through secret
-    char guess_char = guess.at(position);                       // temp var to keep track of shit 
+  for (int position = 0; secret.size() > position;
+       position++) {                      // itterate through secret
+    char guess_char = guess.at(position); // temp var to keep track of shit
 
-    if(secret.at(position) == guess_char) { // check if the letter at position in secret and guess are the same                     
-      color_map.push_back(correct);         // add correct to the colormap vector
-      letter_counts[guess.at(position)] --; // decrement the count of the letter we just guessed in letter_count. this keeps the (contians) logic from getting off by 1 errors
+    if (secret.at(position) == guess_char) { // check if the letter at position
+                                             // in secret and guess are the same
+      color_map.push_back(correct); // add correct to the colormap vector
+      letter_counts[guess.at(
+          position)]--; // decrement the count of the letter we just guessed in
+                        // letter_count. this keeps the (contians) logic from
+                        // getting off by 1 errors
 
     } else {
-      color_map.push_back(wrong); // add wrong to colormap just to put a value there so we can use .at for this position, we will change it later if its contained.
+      color_map.push_back(wrong); // add wrong to colormap just to put a value
+                                  // there so we can use .at for this position,
+                                  // we will change it later if its contained.
 
-      for (int p_wrong = 0; secret.size() > p_wrong; p_wrong++) { // itterate through the secret again, we should by now know that guess @ p != secret @ p
+      for (int p_wrong = 0; secret.size() > p_wrong;
+           p_wrong++) { // itterate through the secret again, we should by now
+                        // know that guess @ p != secret @ p
 
-        if (guess_char == secret.at(p_wrong)) {  // if the guess is the same as secret at p_wrong  
-        letter_counts[guess.at(position)] --;    // decrement the count of the letter we just guessed in letter_count.
+        if (guess_char ==
+            secret.at(
+                p_wrong)) { // if the guess is the same as secret at p_wrong
+          letter_counts[guess.at(
+              position)]--; // decrement the count of the letter we just guessed
+                            // in letter_count.
 
-          if (letter_counts[guess.at(position)] >= 0) { // check if the letter were checking has any remaining instances in letter_counts
-            color_map.at(position) = contained; // if it does replace wrong with contained.
+          if (letter_counts[guess.at(position)] >=
+              0) { // check if the letter were checking has any remaining
+                   // instances in letter_counts
+            color_map.at(position) =
+                contained; // if it does replace wrong with contained.
           }
         }
       }
