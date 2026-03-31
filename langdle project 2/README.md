@@ -1,6 +1,9 @@
 # langdle - Project 2
+Langdle is a game where you fight back and take AI's job, seeing how well you are able to do token prediction on literature
+samples from project gutenberg.
+
 The idea of the game is that, given some language data, you are trying to guess the next token. Much like how a language model does.
-Every time you fail you are given more words you have 5 attempts, maxing out at 100 words and increasing exponentially.
+Every time you fail you are given more words you have 5 (arbitrary) attempts.
 ## extensions
 - local AI model to compete with
     - llma
