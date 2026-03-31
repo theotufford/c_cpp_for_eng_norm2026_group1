@@ -6,7 +6,7 @@ The idea of the game is that, given some language data, you are trying to guess 
 Every time you fail you are given more words you have 5 (arbitrary) attempts.
 ## extensions
 - local AI model to compete with
-    - llma
+    - https://github.com/ggml-org/llama.cpp
 - classify and rememeber certain sections as being difficult
     - local record file that stores the average number of guesses for a certain picked word index
 # systems
