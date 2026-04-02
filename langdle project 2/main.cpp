@@ -29,10 +29,9 @@ game humansolve(string filename) {
   // to process them
   // note the utility of the enum defined within 
   // the game class
-
   return humangame;
 }
-// ^ THEO
+
 
 // the main role of this is to repeat the game until the user quits
 // should also iterate through all the local text files and randomly

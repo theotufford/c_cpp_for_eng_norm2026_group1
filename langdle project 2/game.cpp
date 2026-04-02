@@ -59,9 +59,11 @@ int game::guess(string input_guess) {
   guesslog.push_back(input_guess);
 
   if (input_guess == secret_word) {
+    winstate = GAME_WON;
     return GAME_WON;
   }
   if (guesscount == GUESSMAX) {
+    winstate = GAME_LOST;
     return GAME_LOST;
   }
   return WRONG;
