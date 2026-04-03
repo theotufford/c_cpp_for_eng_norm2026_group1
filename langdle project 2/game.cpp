@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include "game.h"
+#include <fstream>
+#include <sstream>
+#include <cmath>
 
 /* sets the puzzle vector from appropriately sized string
  *
@@ -19,7 +22,44 @@
  * progressively more information to the player
  */
 void game::set_puzzle(string puzzletext){
+  //srand(NULL);
+  //vector<string> puzzle = {""};             // NOTE: vector already initialized in the game.h file
 
+  ifstream readfile(puzzletext);
+    if (readfile.is_open()) {
+      string line;
+      int word_count = 0;
+      int random_indx;
+
+      stringstream ss(puzzletext);    // *Working text body*
+      string word;
+      vector<string> word_list;
+      while (ss >> word) {
+        word_count += 1;
+        word_list.push_back(word);    // word_list becomes {"the", "dog", "etc."}
+      }
+
+      for (int puzzleindex = 1; puzzleindex <= GUESSMAX; puzzleindex++) {
+        int wordsatindex = pow(3, puzzleindex);
+        for (int i = word_list.size() - 1; i >= word_list.size() - wordsatindex; i-- ) {
+          puzzle.push_back(word_list.at(i));
+        }
+      }
+/*
+      while (getline(readfile, line)) {                          
+        //random_indx = rand() % (word_count - 3);
+
+        for (int i = ; i < random_indx; i++) {
+                   // Should iterate starting at the last word in the text sequence, initially outputting the two final words before the last.
+          while (ss << word) {                                    // Should iterate using a reverse loop that increments starting at 3^0, incrementing the exponent for each attempt, or until 3^5 quantity of numbers are pushed into the vector, updating the vector each attempt.
+            puzzle.push_back(word);                               // Don't need to read/write to files using this function.
+          }                                                       // Use GUESSMAX in place of manually implementing exponent.
+        }
+      }
+    } */
+
+    readfile.close();
+}
 }
 // ^ SEAN
 
@@ -30,9 +70,21 @@ void game::set_puzzle(string puzzletext){
  * pertinent information via cout
  */
 void game::display_comparison(game other){
+  int win_conclusion = game::GAME_WON;
+  int loss_conclusion = game::GAME_LOST;
+  int determine;
+  vector<game> game_history;
 
+  for (int i = 0; i < game_history.size(); i++ ) {
+    //cout << "The real words are: " << puzzle.at(i) << endl;
+    if (determine == 1) {
+      //cout << "Game was won." << endl;
+    }
+    else {
+      //cout << "Game was lost." << endl;
+    }
+  }
 }
-// ^ SEAN
 
 
 /* generates secret word index from local text file
