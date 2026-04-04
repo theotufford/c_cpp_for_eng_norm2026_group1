@@ -49,7 +49,7 @@ int main() {
   do {
     // display general game title and information
     cout << "====================================" << endl;
-    cout << "                      LANGDALE" << endl;
+    cout << "                      LANGDLE" << endl;
     cout << "====================================" << endl;
     cout << "   Can you fight back and take AI's job?" << endl;
     cout << "   Or will you fail and be the ultimate chud?" << endl;
@@ -72,13 +72,11 @@ int main() {
       cerr << "Directory not found." << endl;
       return 1;
     }
-    
     // if not .txt files found error prompt
     if (sources.empty()) {
       cerr << "There is no files in ./sources/ - Dai Lai" << endl;
       return 1;
     }
-    
     // picks a random file
     string filename = sources[rand() % sources.size()];
 
@@ -94,7 +92,7 @@ int main() {
   } while (playAgain == 'y' || playAgain == 'Y');
 
   // exit title 
-  cout << "Thanks for playing Langdale. Adios!" << endl;
+  cout << "Thanks for playing Langdle. Adios!" << endl;
   return 0;
 }
 
