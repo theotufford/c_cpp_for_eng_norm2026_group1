@@ -18,3 +18,10 @@ Every time you fail you are given more words you have 5 (arbitrary) attempts.
 ## input handling
 - check if correct word
 - display new tokens or give victory
+
+
+Documentation for filesystem used in the main():
+https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
+https://en.cppreference.com/w/cpp/filesystem.html
+https://www.geeksforgeeks.org/cpp/file-system-library-in-cpp-17/
+
