@@ -14,6 +14,7 @@ class game {
   int guesscount = 0;
   vector<string> guesslog = {};
   string secret_word;
+  int winstate = 0;
 
   public:
   int guess(string input_guess);
