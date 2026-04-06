@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-
 using namespace std;
 #define GUESSMAX 5
 
@@ -15,6 +14,7 @@ class game {
   int guesscount = 0;
   vector<string> guesslog = {};
   string secret_word;
+  int winstate = 0;
 
   public:
   int guess(string input_guess);
