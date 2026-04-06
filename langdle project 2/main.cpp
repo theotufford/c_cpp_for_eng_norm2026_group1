@@ -1,18 +1,20 @@
+#include "game.cpp"
+#include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <exception>
+#include <filesystem>
+#include <iostream>
 #include <string>
 #include <vector>
-#include "game.cpp"
-#include <iostream>
-#include <filesystem>
-#include <ctime>
 
 using namespace std;
 using namespace std::filesystem;
 
+// ran out of time to implement this :(
 // use a local AI model to play the game
-game llmsolve(game player_game) {
-  game llmgame = player_game.newgame_from_puzzle();
+game llmsolve(string fileneame) {
+  game llmgame = game(fileneame);
 
   // make the AI play
 
@@ -23,19 +25,33 @@ game llmsolve(game player_game) {
 // main gameplay loop
 game humansolve(string filename) {
 
-  // explicitly calling the 
-  // constructor here makes it a 
+  cout << "file picked: " << filename << endl;
+
+  // explicitly calling the
+  // constructor here makes it a
   // bit clearer
   game humangame = game(filename);
 
-  // make the human play 
-  // take input guesses using the guess function
-  // to process them
-  // note the utility of the enum defined within 
-  // the game class
+  string response;
+  for (string given_info : humangame.puzzle) {
+    cout << "given_info: " << given_info << endl;
+    cin.clear();
+    cin >> response;
+    switch (humangame.guess(response)) {
+    case game::GAME_WON:
+      cout << "you win!!" << endl;
+      return humangame;
+    case game::GAME_LOST:
+      cout << "no more guesses" << endl
+           << "the secret word was: " << humangame.secret_word << endl;
+      break;
+    case game::WRONG:
+      cout << "wrong guess!" << endl;
+      break;
+    }
+  }
   return humangame;
 }
-
 
 // the main role of this is to repeat the game until the user quits
 // should also iterate through all the local text files and randomly
@@ -44,12 +60,12 @@ game humansolve(string filename) {
 // then compare the two games and repeat
 int main() {
   srand(time(nullptr)); // seeds rand() so same file isnt opened everytime
-  
-  char playAgain;       // tracks whether user want to play again
+
+  char playAgain; // tracks whether user want to play again
   do {
     // display general game title and information
     cout << "====================================" << endl;
-    cout << "                      LANGDLE" << endl;
+    cout << "              LANGDLE" << endl;
     cout << "====================================" << endl;
     cout << "   Can you fight back and take AI's job?" << endl;
     cout << "   Or will you fail and be the ultimate chud?" << endl;
@@ -62,8 +78,8 @@ int main() {
     path directorypath = "./sources";
     vector<string> sources;
 
-    if (exists(directorypath) && is_directory(directorypath)){
-      for(const auto& entry : directory_iterator(directorypath)) {
+    if (exists(directorypath) && is_directory(directorypath)) {
+      for (const auto &entry : directory_iterator(directorypath)) {
         if (entry.path().extension() == ".txt") {
           sources.push_back(entry.path().filename().string());
         }
@@ -81,17 +97,19 @@ int main() {
     string filename = sources[rand() % sources.size()];
 
     game human_game = humansolve(filename);
-    game llm_game = llmsolve(human_game);
-    human_game.display_comparison(llm_game);
+
+    // game llm_game = llmsolve(filename);
+    // human_game.display_comparison(llm_game);
 
     // prompts until valid response is received.
-    do{
-    cout << "Wanna try again? (y/n): ";
-    cin >> playAgain;
-    }while (playAgain != 'y' && playAgain != 'Y' && playAgain != 'n' && playAgain != 'N');
+    do {
+      cout << "Wanna try again? (y/n): ";
+      cin >> playAgain;
+    } while (playAgain != 'y' && playAgain != 'Y' && playAgain != 'n' &&
+             playAgain != 'N');
   } while (playAgain == 'y' || playAgain == 'Y');
 
-  // exit title 
+  // exit title
   cout << "Thanks for playing Langdle. Adios!" << endl;
   return 0;
 }

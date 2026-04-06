@@ -10,23 +10,24 @@ using namespace std;
 // progress is automatically tracked
 class game {
   private:
-  vector<string> puzzle = {"empty"};
-  int guesscount = 0;
-  vector<string> guesslog = {};
-  string secret_word;
-  int winstate = 0;
+  int guesscount;
+  vector<string> guesslog;
+  int winstate;
 
   public:
+  vector<string> puzzle;
+  string secret_word;
   int guess(string input_guess);
   enum {
     WRONG,
     GAME_WON,
-    GAME_LOST
+    GAME_LOST,
+    START
   };
   void display_comparison(game other);
   void set_puzzle(string puzzletext);
-  game(); // allow for making empty new games
   game(string source_filename);
+  game();
   game newgame_from_puzzle();
   game get_testgame();
 
