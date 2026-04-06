@@ -4,6 +4,8 @@
 #include <vector>
 #include "game.h"
 #include <fstream>
+#include "get_valid_secret.hpp"
+#include <cmath>
 #include <sstream>
 #include <cmath>
 
@@ -98,10 +100,7 @@ void game::display_comparison(game other){
  * log each index in ./indexlists/<filename> to minimize runtime.
  *
  */
-int get_valid_secret_index(string filename) {
-  int chosen_index;
-  return chosen_index;
-}
+// i turned this into an include bc its really long 
 // ^ ELI
 
 // process input guess
@@ -128,10 +127,29 @@ int game::guess(string input_guess) {
  * such that the last word is at the secret index in the file.
  */
 game::game(string source_filename) {
-  string chosen_secret_filename;
-  string puzzle_text;
+  string chosen_secret_filename; // the file do you want to play the game on
+  string puzzle_text; // the thing we will put to the console that includes a blacked out secret word at the end of the passage were reading
 
-  int secret_index = get_valid_secret_index(chosen_secret_filename);
+  secret activeSecret = get_valid_secret_index(chosen_secret_filename); // get a secret word form the source file
+  int secret_index = activeSecret.index; // the position of the active secret in the secret index (indexlists)
+  string secret_word = activeSecret.word; // the verbage of the secret word
+  
+  ifstream findSecret; // open a read stream 
+  findSecret.open(source_filename + ".txt"); // read the sourcetext we will be finding the secret word
+  int cursorPos = 0; // the word were on 
+  while (findSecret.good() && cursorPos <= activeSecret.position) { // while the file is valid and we are not at the position of the secret word
+  string tempString; // the string we are on in the sourcetext 
+  findSecret >> tempString; // put the string in the sourcetext into tempstring 
+  cursorPos ++; // itterate the word were on
+  // the following defines the logic of the string shown to the user to educate their guess
+  while ( (activeSecret.position - (3, GUESSMAX)) <= cursorPos < activeSecret.position ) // if the position of the string were on is within 3 ^ guessmax words before the secret word 
+  puzzle_text.append(" " + tempString); // if so add it to the string people will see when they play
+  }
+  findSecret.close(); // close ya files
+  puzzle_text.append(" "); // add a space at the end 
+  for (char c: activeSecret.word) { // for however large the secret word is
+  puzzle_text.append("_"); // black it out 
+  }
 
   // secret_word = indexed word
   // set puzzle via puzzle text

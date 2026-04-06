@@ -55,3 +55,7 @@ assignments:
 
 
 
+Faruk - lexical storage of different gol structures
+Eli - allow the user to create starting conditions 
+Sean - Implementing game logic
+theo - general architecture 
