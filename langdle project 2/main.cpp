@@ -34,7 +34,7 @@ game humansolve(string filename) {
 
   string response;
   for (string given_info : humangame.puzzle) {
-    cout << "given_info: " << given_info << endl;
+    cout << "given_info: " << given_info << "_______" <<  humangame.punct  << endl;
     cin.clear();
     cin >> response;
     switch (humangame.guess(response)) {

@@ -197,6 +197,7 @@ game::game(string source_filename)
   // currently the cursor is on the secret word
   source_file >> secret_word;
   // remove the punctuation that is on its end by definition
+  punct = secret_word.back();
   secret_word.pop_back();
   source_file.close(); // close ya files
 

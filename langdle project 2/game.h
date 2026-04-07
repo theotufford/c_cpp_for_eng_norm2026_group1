@@ -17,6 +17,7 @@ class game {
   public:
   vector<string> puzzle;
   string secret_word;
+  char punct;
   int guess(string input_guess);
   enum {
     WRONG,
