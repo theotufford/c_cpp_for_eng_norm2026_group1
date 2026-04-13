@@ -1,9 +1,7 @@
 #include "game.h"
 #include <cctype>
 #include <cmath>
-#include <csignal>
 #include <cstdlib>
-#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -22,52 +20,71 @@ game::game() : guesscount(0), guesslog({}), secret_word(""), winstate(START) {}
  *
  * input is a string of length 3 ^ GUESSMAX
  *
- * for example puzzle[0] is "word word secret word"
+ * for example puzzle[0] is "word word secret-word"
  *
- * this is iterated through in the gameplay loop to expose
+ * the puzzle vector is iterated through in the gameplay loop to expose
  * progressively more information to the player
  */
 void game::set_puzzle(string puzzletext) {
-  string line;
-  int word_count = 0;
-
-  stringstream ss(puzzletext); // *Working text body*
-  string word;
-  vector<string> word_list;
-  while (ss >> word) {
-    word_count += 1;
-    word_list.push_back(word); // word_list becomes {"the", "dog", "etc."}
-  }
+  const int puzzle_wordcount = pow(3, GUESSMAX);
+  // iterate through each possible round (start at 1 so initial reveal is 3)
   for (int round_ind = 1; round_ind <= GUESSMAX; round_ind++) {
-    string tempstring{};
-    int guess_start = word_count - pow(3, round_ind);
-    for (int word_ind = guess_start; word_ind < word_count; word_ind++) {
-      tempstring += word_list.at(word_ind) + " ";
+    string given_string =
+        ""; // string that contains the given info for this round
+    string tempstring;
+    stringstream puzzle_stream(
+        puzzletext); // create new stream from given text
+                     // this has to be done every time because
+                     // the extraction operator consumes data
+
+    // find where the given clue string begins in the word list
+    int given_start_index = puzzle_wordcount - pow(3, round_ind);
+    // consume the buffer into oblivion until you reach the right index
+    for (int word_ind = 0; word_ind < given_start_index; word_ind++) {
+      puzzle_stream >> tempstring;
     }
-    puzzle.push_back(tempstring);
+
+    while (puzzle_stream >> tempstring) {
+      given_string += tempstring + " ";
+    }
+    // add given string to its puzzle index in the puzzle vector
+    puzzle.push_back(given_string);
   }
 }
 // ^ SEAN
-
-/* print out comparison between this run and
- * another run.
- * reference the class outline and display
- * pertinent information via cout
+/* this function is maybe sort of a lost cause and an endeavor in
+ * over-delegation. That one is on me. I also gave slightly poorly worded
+ * directions which meant that I ended up re-writing this one because I didn't
+ * clarify the context of this function well enough in the outline.
+ * Also, the original solution I finished and the one I turned in was functional
+ * but had a really logic flow that unnecessarily reversed and un-reversed the
+ * given string.
+ * - Theo
  */
-void game::display_comparison(game other) {
-  int win_conclusion = game::GAME_WON;
-  int loss_conclusion = game::GAME_LOST;
-  int determine;
-  vector<game> game_history;
 
-  for (int i = 0; i < game_history.size(); i++) {
-    // cout << "The real words are: " << puzzle.at(i) << endl;
-    if (determine == 1) {
-      // cout << "Game was won." << endl;
-    } else {
-      // cout << "Game was lost." << endl;
+// validate whether word is a valid secret word choice
+bool validate_word(string word) {
+
+  // commas are sort of against the spirit of the game 
+  // even though this makes it easier.
+  bool punctuated = ispunct(word.back()) && word.back() != ',';
+  bool capitalized = isupper(word.front());
+
+  // return early to avoid unnecessarily iterating over a word if word isnt promising
+  if ( !punctuated || capitalized) {
+    return false;
+  }
+
+  // check if promising word contains other punctuation and invalidate it if so
+  word.pop_back();
+  for (char letter: word) {
+    if (!isalpha(letter)) {
+      return false;
     }
   }
+
+  // word is otherwise valid!
+  return true;
 }
 
 /* generates secret word index from local text file
@@ -82,62 +99,65 @@ void game::display_comparison(game other) {
  *
  */
 
-bool validate_word(string word) {
-  bool ends_in_punctuation = ispunct(word.back());
-  bool longer_than_3 = word.size() > 3;
-  bool notcaps = islower(word.at(0));
-
-  return ends_in_punctuation && notcaps && longer_than_3;
-}
-
 int get_random_valid_index(string filename) {
-  vector<int> valid_indecies{};
+  // vector to be populated with the word indices choose a random index from
+  vector<int> valid_indices{};
+  // fstream for the cached index list
   fstream indexlist;
+  // fstream for the primary text source
   fstream primary_source;
   primary_source.open("./sources/" + filename);
-  // look for indexlist that indexes all the valid possible
-  // secrets
   indexlist.open("./indexlists/" + filename);
 
+  // if we didnt find a cached index list for the named file
   if (!indexlist.good()) {
-    // if not found make it
+    // make said file
     ofstream indexlist_file("./indexlists/" + filename);
-    // index through primary source file, incrementing the index per word
     string currentword;
-    int index = 0;
+    int word_ind = 0;
+    // index through primary source file, incrementing the index per word
     while (primary_source >> currentword) {
       // dont pick a word less than the string length from the beginning
-      if (index < pow(3, GUESSMAX)) {
-        index++;
+      if (word_ind < pow(3, GUESSMAX)) {
+        word_ind++;
         continue;
       }
       // make sure word is a reasonable secret word
       bool valid = validate_word(currentword);
       if (valid) {
-        // append index to valid indecies
-        indexlist_file << " " + to_string(index);
-        valid_indecies.push_back(index);
+        // append word index to valid indices
+        indexlist_file << " " + to_string(word_ind);
+        valid_indices.push_back(word_ind);
       }
-      index++;
+      word_ind++;
     }
+    // close ya files
     indexlist_file.close();
+    primary_source.close();
   }
   // if we didnt already populate the index vector by creating
   // the index file during this call we may do so now
   // by processing the index file
-  if (valid_indecies.size() == 0) {
+  if (valid_indices.size() == 0) {
     int currentind;
     while (indexlist >> currentind) {
-      valid_indecies.push_back(currentind);
+      valid_indices.push_back(currentind);
     }
   }
 
   // randomly pick valid index from list
-  cout << "secret indecies size: " << valid_indecies.size() << endl;
+  cout << "secret indices size: " << valid_indices.size() << endl;
   indexlist.close();
-  return valid_indecies.at(rand() % valid_indecies.size());
+  return valid_indices.at(rand() % valid_indices.size());
 }
-// ^ ELI + THEO
+// ^ ELI
+/* Eli slightly overcomplicated this on himself but I used pretty much the same
+ * logic and just trimmed out a couple of things he did that created too much
+ * technical debt, I would've left it but there was a weird parsing error that I
+ * literally couldn't figure out how to fix because of the tech debt. At the end
+ * of the day its on me as a leader to have given him a more clear outline
+ * - Theo
+ */
 
 // process input guess
 int game::guess(string input_guess) {
@@ -179,7 +199,7 @@ game::game(string source_filename)
   string tempString; // the string we are on in the sourcetext
   while (source_file.good() &&
          cursorPos < secret_index) { // while the file is valid and we are not
-                                      // at the position of the secret word
+                                     // at the position of the secret word
     // put the string in the sourcetext into tempstring
     source_file >> tempString;
     cursorPos++; // itterate the word were on
@@ -204,10 +224,10 @@ game::game(string source_filename)
   set_puzzle(puzzle_text);
 }
 // ^ ELI
-
-// make new copy of some game with a blank history
-game game::newgame_from_puzzle() {
-  game blank_game;
-  blank_game.puzzle = puzzle;
-  return blank_game;
-}
+/*
+ * basically no cleanup required on this one from me, I just replaced and
+ * simplified some logic because Eli's original solution for the
+ * "get_random_valid_index" function returned a struct and used some logic from
+ * that, which was no longer needed once the get random function was modified.
+ *  - Theo
+ */

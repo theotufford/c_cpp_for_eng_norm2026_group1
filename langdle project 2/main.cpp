@@ -1,8 +1,6 @@
 #include "game.cpp"
-#include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -13,6 +11,7 @@ using namespace std::filesystem;
 
 // ran out of time to implement this :(
 // use a local AI model to play the game
+// also it wouldve been able to validate and return cosine similarity per guess
 game llmsolve(string fileneame) {
   game llmgame = game(fileneame);
 
@@ -25,6 +24,7 @@ game llmsolve(string fileneame) {
 // main gameplay loop
 game humansolve(string filename) {
 
+  // let the player know what text its from
   cout << "file picked: " << filename << endl;
 
   // explicitly calling the
@@ -33,25 +33,31 @@ game humansolve(string filename) {
   game humangame = game(filename);
 
   string response;
+  // loop through the puzzle
   for (string given_info : humangame.puzzle) {
-    cout << "given_info: " << given_info << "_______" <<  humangame.punct  << endl;
+    // display given info
+    cout << "given_info: " << given_info << "_______" << humangame.punct
+         << endl;
     cin.clear();
     cin >> response;
+    // call guess function on response, switch on the result
     switch (humangame.guess(response)) {
-    case game::GAME_WON:
+    case GAME_WON:
       cout << "you win!!" << endl;
       return humangame;
-    case game::GAME_LOST:
+    case GAME_LOST:
+      // reveal secret word if game over
       cout << "no more guesses" << endl
            << "the secret word was: " << humangame.secret_word << endl;
       break;
-    case game::WRONG:
+    case WRONG:
       cout << "wrong guess!" << endl;
       break;
     }
   }
   return humangame;
 }
+// ^ THEO
 
 // the main role of this is to repeat the game until the user quits
 // should also iterate through all the local text files and randomly
@@ -97,9 +103,7 @@ int main() {
     string filename = sources[rand() % sources.size()];
 
     game human_game = humansolve(filename);
-
-    // game llm_game = llmsolve(filename);
-    // human_game.display_comparison(llm_game);
+    game llm_game = llmsolve(filename);
 
     // prompts until valid response is received.
     do {
@@ -115,3 +119,12 @@ int main() {
 }
 
 // ^ FARUK
+/* Faruk's was the only code that I did not have to change at all.
+ * well done on his part.
+ * Also this was probably the best outline I made and probably the most
+ * independent system which I think made it a little more straightforward.
+ * not to undermine his work, I only mean to say that I should have done
+ * a better job of delegating and giving good outlines on the other functions.
+ * Either way, very well done by him.
+ * - Theo
+ */
