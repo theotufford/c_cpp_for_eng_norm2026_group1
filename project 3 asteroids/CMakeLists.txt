@@ -13,4 +13,4 @@ find_package(SDL2 REQUIRED)
 add_executable(asteroids main.cpp)
 
 # genuinely idk, sort of loads sdl
-target_link_libraries(SDL2_Example PRIVATE SDL2::SDL2)
+target_link_libraries(asteroids PRIVATE SDL2::SDL2)
