@@ -1,2 +1,34 @@
 ** I will be adding game concepts here**
 
+Game Objectives:
+
+- Collect three distinct items, each belonging to either Julian, Ricky, or Bubbles, and successfully deliver each item without getting caught by Randy.
+- The player starts with three lives at the beginning of the game, and may lose a life if they run into Randy (similar to Pacman).
+- The player must interact with a character to enable their specific item quest.
+- All quests may be active at the same time.
+- Randy will stand guard around a grill, making it impossible to get to and steal the grill (for the cookout as per the story)
+- Once the player successfully returns all three items to each trailer park boy, the boys will distract Randy for a period of time, 
+  drawing his attention away from the grill, allowing our player to get their hands on it, thus winning the game.
+
+Randy:
+
+- The player may alert Randy if they approach too closely causing him to chase the player at the same speed as the player.
+- Randy will not cease chasing the player until the player runs into a "dirty burger" (a finite number may be placed around the map and are only visible 
+  when the player is being chased).
+- When the player runs into a "dirty burger", Randy is calmed and returns to the grill. 
+- If Randy catches the player, Randy’s portrait appears with specific dialogue indicating the player’s status.
+- If the player still has a game life after getting caught, a portrait of Randy will appear alongside a specific dialogue (strikes one and two).
+- If the player is out of game lives, Randy’s portrait appears with a different dialogue, and the player is placed under trailer arrest, ending the game.
+
+Items:
+
+- There are three retrievable items including a bag of ice cubes (for Julian), a pack of chicken fingers (for Ricky), and a lost Kitty (for Bubbles). 
+- Each item may be stored within different objects at random, with the default locations for each being the ice chest for the bag of ice, 
+  the big oak tree for the kitty, and trailer for the chicken fingers (maybe we only randomize the the location for the chicken fingers, 
+  with the ice cubes and the kitty always being located in the ice chest and oak tree for simplicity).
+- Each location could appear on the map as default map objects, with other trailers being placed as obstacles around the map. 
+- The player may only carry one object at a time for difficulty’s sake, and upon trying to pick up a second item, the player will receive a message 
+  (for example, “Your pockets are full, and may only carry one item at a time”.)
+
+
+
