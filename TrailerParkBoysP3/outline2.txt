@@ -6,7 +6,7 @@ Character:          Quest item:                    Reward:
 Randy            N/A Arrests the player            Force Study
 Julian           Ice Cubes from chest              Rum and Coke
 Ricky            Phil's Chicken Fingers            $4
- Bubbles          Find Sgt Meowenstein              $50
+Bubbles          Find Sgt Meowenstein              $50
 
 
 Portraits:
