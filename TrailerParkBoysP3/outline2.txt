@@ -50,6 +50,11 @@ Prints the top panel containing the character's ASCII Portrait:
 Prints the bottom panel containg the dialogue
     void printDialoguePanel() {
         cout << "|" << endl;
+        for (string line : dialogueLines) {
+            cout << "| " << line  << endl;
+        }
+        cout << "|" << endl;
+        cout << "----------" << endl;
         }
 
 
