@@ -1,5 +1,5 @@
 #include "engine.hpp"
-#include "spritesheet.hpp"
+#include "rendering_utils.hpp"
 #include <SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL_rect.h>
@@ -18,8 +18,6 @@ void kill();
 bool load();
 
 // Pointers to our window and surfaces
-SDL_Window *window;
-SDL_Surface *winSurface;
 
 int main(int argc, char **args) {
 
@@ -29,11 +27,11 @@ int main(int argc, char **args) {
   Player player;
 
   player.position.x += 200;
-  player.draw_sprite(winSurface);
+  player.draw_sprite(gWindow_surface);
   SDL_UpdateWindowSurface(window);
   cin.get();
   player.position.x += 100;
-  player.draw_sprite(winSurface);
+  player.draw_sprite(gWindow_surface);
   SDL_UpdateWindowSurface(window);
   cin.get();
 
@@ -49,10 +47,10 @@ bool init() {
     return false;
   }
 
-  window =
+  gWindow =
       SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
-  if (!window) {
+  if (!gWindow) {
     cout << "Error creating window: " << SDL_GetError() << endl;
     cin.get();
     return false;
@@ -74,8 +72,8 @@ bool init() {
     }
   }
 
-  winSurface = SDL_GetWindowSurface(window);
-  if (!winSurface) {
+  gWindow_surface = SDL_GetWindowSurface(window);
+  if (!gWindow_surface) {
     cout << "Error getting surface: " << SDL_GetError() << endl;
     cin.get();
     return false;

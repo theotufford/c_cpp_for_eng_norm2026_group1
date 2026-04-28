@@ -3,15 +3,59 @@
 #include <SDL_render.h>
 #include <iostream>
 
+using namespace std;
+bool init_sdl() {
+  // See last example for comments
+  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    cout << "Error initializing SDL: " << SDL_GetError() << endl;
+    cin.get();
+    return false;
+  }
+
+  gWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED,
+                       SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+  if (!gWindow) {
+    cout << "Error creating window: " << SDL_GetError() << endl;
+    cin.get();
+    return false;
+  }
+
+  // https://lazyfoo.net/tutorials/SDL/07_texture_loading_and_rendering/index.php
+
+  gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+
+  if (gRenderer == NULL) {
+    printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+  } else {
+    // Initialize renderer color
+    SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+    // Initialize PNG loading
+    int imgFlags = IMG_INIT_PNG;
+    if (!(IMG_Init(imgFlags) & imgFlags)) {
+      printf("SDL_image could not initialize! SDL_image Error: %s\n",
+             IMG_GetError());
+    }
+  }
+
+  gWindow_surface = SDL_GetWindowSurface(gWindow);
+  if (!gWindow_surface) {
+    cout << "Error getting surface: " << SDL_GetError() << endl;
+    cin.get();
+    return false;
+  }
+  return true;
+}
+
 Spritesheet::Spritesheet(char const *path, int row, int column) {
   m_spritesheet_image = IMG_Load(path);
   if (!m_spritesheet_image) {
-    std::cout << "Failed to load: " << path << " — " << IMG_GetError()
-              << std::endl;
+    cout << "Failed to load: " << path << " — " << IMG_GetError()
+              << endl;
     return;
   }
-  std::cout << "Loaded image: " << m_spritesheet_image->w << "x"
-            << m_spritesheet_image->h << std::endl;
+  cout << "Loaded image: " << m_spritesheet_image->w << "x"
+            << m_spritesheet_image->h << endl;
   m_spritesheet_image = IMG_Load(path);
 
   m_clip.w = m_spritesheet_image->w / column;

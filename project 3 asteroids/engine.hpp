@@ -1,6 +1,6 @@
 #pragma once
 #include "physics_utils.hpp"
-#include "spritesheet.hpp"
+#include "rendering_utils.hpp"
 #include <SDL.h>
 #include <SDL_events.h>
 #include <SDL_rect.h>
@@ -31,7 +31,9 @@ public:
 
   virtual void draw_sprite(SDL_Renderer *renderer) = 0;
   virtual void collision_response(PhysicalObject &other) = 0;
+
   void physics_loop(double delta_T);
+
 };
 
 // <========== IMPLEMENTATION / GAME SPECIFIC OBJECTS ==========>
@@ -54,7 +56,9 @@ public:
   // collision response is identical for all pawns, only death behavior changes
   void collision_response(PhysicalObject &other);
   void take_damage(int damage);
+
   virtual void on_death() = 0;
+
   void physics_loop(double delta_T);
 
   Pawn(int initial_health, // Pawn health
