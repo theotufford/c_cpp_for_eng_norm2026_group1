@@ -1,34 +1,64 @@
 {
-  "dialogue":[
+  "prompt": "initial branch prompt!",
+  "branch_tags": [],
+  "dialogue": [
     "hello",
     "this is some dialogue",
+    "the prompt for this branch should probably show up when in range"
   ],
-  "this is an option":{
-    "dialogue": [
-      "this is the dialogue of the first option",
-      "congrats it seems like its working"
-    ],
-    "this is an option in the second group of choices after choosing option 1
-    in the first group":{
+  "options": [
+    {
+      "prompt": "exit_dialogue",
+      "branch_tags": [
+        "exit_choice"
+      ],
+      "dialogue": [],
+      "options": []
+    },
+    {
+      "prompt": "prompt for option 1",
+      "branch_tags": [
+        "tagged_choice"
+      ],
       "dialogue": [
-        "you picked choice 1-1-1!"
+        "this is the dialogue of the first option",
+        "congrats it seems like its working",
+        "this is also a tagged choice, hopefully that does something"
+      ],
+      "options": [
+        {
+          "prompt": "this is an option in the second group of choices after choosing option 1 in the first group",
+          "branch_tags": [],
+          "dialogue": [
+            "you picked choice 1-1-1!"
+          ],
+          "options": []
+        },
+        {
+          "prompt": "this is also an option",
+          "branch_tags": [],
+          "dialogue": [
+            "you picked choice 1-2-2"
+          ],
+          "options": []
+        }
+      ]
+    },
+    {
+      "prompt": "this is another option for the first dialogue choice",
+      "branch_tags": [],
+      "dialogue": [
+        "this is another section of dialogue"
+      ],
+      "options": [
+        {
+          "prompt": "this is a suboption",
+          "branch_tags": [],
+          "dialogue": [
+            "you picked the suboption for choice 1-2"
+          ]
+        }
       ]
     }
-    "this is also an option": {
-      "dialogue":[
-        "you picked choice 1-2-2"
-      ]
-    }
-  },
-  "this is another option for the first dialogue choice":{
-    "dialogue": [
-      "this is another section of dialogue"
-    ], 
-    "this is a suboption":{
-        "dialogue":[
-          "you picked the suboption for choice 1-2"
-        ]
-      }
-    }
-  }
+  ]
 }
