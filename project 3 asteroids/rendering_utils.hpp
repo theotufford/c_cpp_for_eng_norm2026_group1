@@ -12,11 +12,12 @@
 // adapted from https://dev.to/noah11012/using-sdl2-spritesheets-46h5
 
 // global renderer instance
+
 extern SDL_Renderer *gRenderer;
 extern SDL_Window *gWindow;
 extern SDL_Surface *gWindow_surface;
 
-void init_sdl();
+bool init_sdl();
 
 class Spritesheet {
 public:

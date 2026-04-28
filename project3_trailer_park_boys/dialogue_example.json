@@ -1,0 +1,34 @@
+{
+  "dialogue":[
+    "hello",
+    "this is some dialogue",
+  ],
+  "this is an option":{
+    "dialogue": [
+      "this is the dialogue of the first option",
+      "congrats it seems like its working"
+    ],
+    "this is an option in the second group of choices after choosing option 1
+    in the first group":{
+      "dialogue": [
+        "you picked choice 1-1-1!"
+      ]
+    }
+    "this is also an option": {
+      "dialogue":[
+        "you picked choice 1-2-2"
+      ]
+    }
+  },
+  "this is another option for the first dialogue choice":{
+    "dialogue": [
+      "this is another section of dialogue"
+    ], 
+    "this is a suboption":{
+        "dialogue":[
+          "you picked the suboption for choice 1-2"
+        ]
+      }
+    }
+  }
+}
