@@ -1,0 +1,75 @@
+Outline:
+
+Characters & Quests:
+Character:          Quest item:                    Reward:
+----------------------------------------------------------------
+Randy            N/A Arrests the player            Force Study
+Julian           Ice Cubes from chest              Rum and Coke
+Ricky            Phil's Chicken Fingers            $4
+Bubbles          Find Sgt Meowenstein              $50
+
+
+Portraits:
+    Defined each characters portrait as a string constant to keep the portraits consistent throughtout the program.
+Example:
+    const string Julian_Portrait = (ASCII portrait goes here)
+
+Dialogue States Per Character:
+    Each character needs 3(4 with wrong) dialogue states:
+        intro/Introduction: First meeting and describes quest to player
+        item_yes: player returns with the item described
+        item_no: player doesnt return with the item described
+        item_wrong: player returns with the wrong item described
+            Example: The player brings Randy's Ice Cubes to Ricky instead of Phil's Chicken Fingers like intended.
+    Character can say for item_wrong state Dialogue:
+        "Julian"
+        State: item_wrong
+        Dialogue: That's not what I asked for man... I need ice cubs, not chicken fighers!
+
+
+Dialogue Class:
+    class Dialogue {
+        private:
+        string characterName;
+        string asciiProtrait;
+        vector<string> dialogueLines;
+        }
+
+
+Prints the top panel containing the character's ASCII Portrait:
+    void printPortraitPanel() {
+        cout << "----------" << endl;
+        cout << "| "<< characterName << endl;
+        cout << "|" << endl;
+        cout << asciiPortrait;
+        cout << "----------" << endl;
+        }
+    We can try to switch the order it appears by putting the portrait first. So it goes portrait first -> name underneath -> then the dialogue underneath that.
+
+
+Prints the bottom panel containg the dialogue
+    void printDialoguePanel() {
+        cout << "|" << endl;
+        for (string line : dialogueLines) {
+            cout << "| " << line  << endl;
+        }
+        cout << "|" << endl;
+        cout << "----------" << endl;
+        }
+
+
+
+
+Dialogue Trees & Linked Lists: 
+    A dialogue tree is a branching structure; example would be the player talks to a character(intro), makes a choice (item found(yes/no)), and different dialogue plays depending on choice(yes/no item dialogues).
+    A linked list would be a good fit for these dialogue trees.
+    Here' the google A.I summarizer slop definition: 
+        A linked list is a linear data structure consisting of nodes, where each node contains data and a pointer (reference) to the next node in the sequence.
+    So:
+        Each Node holds one dialogue state and a pointer to the next struct DialogueNode
+            Example:
+                struct DialogueNode {
+                string dialogueKey; // "intro", "item_yes", "item_no"
+                Dialogue* dialogue; // points to the dialogue object to display
+                DialogueNode* next; // next node in the tree
+                }

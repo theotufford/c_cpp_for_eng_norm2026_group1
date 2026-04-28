@@ -1,89 +1,81 @@
-Objective: Get your grade 10!
+[CHARACTER:Randy]
+[STATE:intro]
+I got you, buddy! You're now under temporary trailer arrest.
+Good luck studying for your grade ten!
+I'm off to get me a dirty burger....
+[END]
 
-    Grade 10 Quiz:
+[CHARACTER:Julian]
+[STATE:intro]
+Hey man, who are you? I haven't seen you around the trailer park before.
+I'm Julian, one of the boys. Watch out for Randy.
+If you come across the ice chest, grab me a bag of ice cubes.
+[END]
 
-        10 Questions:
+[CHARACTER:Julian]
+[STATE:item_yes]
+Did you get my ice cubes? Thanks man, I really appreciate it.
+Here, have a rum and coke on me.
+[END]
 
-            2 Algebra:
+[CHARACTER:Julian]
+[STATE:item_no]
+Did you get my ice cubes? Dangit! Find the ice chest.
+Don't wait too long, this heat's killin me.
+[END]
 
-            2 Grammar:
+[CHARACTER:Julian]
+[STATE:item_wrong]
+That's not what I asked for man...
+I need ice cubes, not chicken fingers!
+[END]
 
-            2 Biology:
+[CHARACTER:Ricky]
+[STATE:intro]
+Hey buddy, you got a smoke? Frickin Tracey stole my cigarettes.
+If you stop by Phil's trailer, grab me some chicken fingers.
+I'll pay ya, just don't tell Julian.
+[END]
 
-            2 Spanish:
+[CHARACTER:Ricky]
+[STATE:item_yes]
+Do you have my chicken fingers? Holy crap, thanks dude!
+Here's $4 for your time. Take a chicken finger too, you deserve it.
+[END]
 
+[CHARACTER:Ricky]
+[STATE:item_no]
+Do you have my chicken fingers? No worries buddy.
+Stop by Phil's trailer, he's usually gone during the day.
+[END]
 
-Make dialogue class and function that prints out dialogue interface to the screen. 
-Will also include a dialogue tree.
+[CHARACTER:Ricky]
+[STATE:item_wrong]
+What the heck is this?! I asked for chicken fingers not frickin ice cubes!
+Phil's trailer, buddy. Chicken. Fingers.
+[END]
 
-Linked List for tree 
+[CHARACTER:Bubbles]
+[STATE:intro]
+Julian is that you? My kitty Sargent Meowenstein's gone missing!
+Would you mind checking the big Oak tree in the middle of the park?
+I'll be working on my shopping carts at my shed if you find him.
+[END]
 
-Pop-Up Script:
+[CHARACTER:Bubbles]
+[STATE:item_yes]
+Did ya find my kitty? Oh Mr. Meowenstein! Thank you so much!
+Here's $50, that should help with your new Air Conditioner.
+[END]
 
-    Randy:
+[CHARACTER:Bubbles]
+[STATE:item_no]
+Did ya find my kitty? Oh geez, what am I gonna do?!
+He's gotta be around here somewhere, probably up that Oak tree.
+[END]
 
-        I got you, buddy! You're now under temporary trailer arrest. Good luck studying for your grade ten! I'm off to get me a dirty burger....
-
-    Julian:
-
-        Intro:
-
-        Hey man, who are you? I haven't seen you around the trailer park before. Anyway, I'm Julian, one of the boys. Feel free to explore a bit, 
-        just watch out for Randy, he's not too keen on trespassers around the park. You can recognize him by his giant gut, as he always walks around 
-        without a shirt on, even though we tell him to wear one. anyway, I'm running low on ice cubes in my trailer, so if you happen to come across
-        the ice chest, I'd appreciate it if you grabbed a bag for me. The ice cubes are usually free. Just try to stay away from Randy.
-
-        Returning with item:
-
-        Did you get my ice cubes? (YES) Thanks, man, I really appreciate it. You know, it's hard to find kind people like 
-        you nowadays, especially with the way things are going with Randy and everyone else in the park. Here, have a rum and coke on me. Feel free 
-        to stop by whenever too, I could introduce you to some of the boys.
-
-        Returning without item:
-
-        Did you get my ice cubes? (NO) Dangit! I thought you would be faster than that! Well, if you find the ice chest, you'll know what to do. 
-        Just don't wait too long, this dang summer heat's killin me in my trailer, especially after Rickey stole my AC.
-
-
-    Ricky:
-
-        Intro:
-
-        Hey buddy, you got a smoke? Frickin Tracey stole my cigarettes and all I have is this useless lighter. Sorry, buddy, it's been a rough week.
-        Randy's been on my case, I don't have any frickin chicken fingers, and frickin Cyrus shot me in the foot again. Speaking of chicken fingers, I think
-        there's some over in Phil Collin's trailer, if you don't mind heading over there. Phil doesen't like em that much anyway. 
-        I'll pay ya, just don't tell Julian. If you need me, I'll be chillin here at my car.
-
-        Returning with item:
-
-        Do you have my chicken fingers? (YES) Holy crap, thanks dude! You don't know how badly I've been craving some chicken fingers lately, 
-        especially after getting shot in the foot, it really takes a lot out of you. Don't worry about Phil, he prefers cheeseburgers anyway.
-        Here's $4 for your time. You know what, take a chicen finger too, you deserve it.
-
-        Returning without item:
-
-        Do you have my chicken fingers? (NO) No worries buddy. If you stop by Phil's trailer, he's usually gone during the day, so you won't have to 
-        worry about him getting all upset about the chicken fingers.
-
-
-    Bubbles:
-
-        Intro:
-
-        Julian is that you? My kitty, Sargent Meowenstein's gone missing! GUH OWW... I knew I should have had him declawed. Stinkin cats always go 
-        missing or run up a tree someplace. Speaking of trees, there's a great big Oak tree sittin in the middle of the park. Would you mind headin 
-        over there to see if you can find Sargent Meowenstein? I'll pay ya a pretty penny. Oh... I never should've left you out of my sight, 
-        Sargent Meowenstein...
-        I'll be working on my shopping carts here at my shed it you find him.
-
-        Returning with item:
-
-        Did ya find my kitty? (YES) Oh Mr. Meowenstein! Thank you Julian, you don'y know how much he means to me. Silly cats. I better keep him in
-        his cage for the time being, the little escape artist... Anyway here's $50, that should help you with getting your new Air Conditioner. Also
-        feel free to use one of my shopping carts for storage or transportation.
-
-        Returning without item:
-
-        Did ya find my kitty? (NO) Oh geez!... What am I gonna do?! He's gotta be around here somewhere. I doubt he'd run off on me like Ms. Peanut did.
-        You really gotta help me out here Julian, Sargent Meowerstein is my number one shed mouser. I really don't want to let anymore mice into my
-        shed than I have to.
+[CHARACTER:Bubbles]
+[STATE:item_wrong]
+That's not Sargent Meowenstein! GUH OWW...
+I'm looking for my kitty, not chicken fingers or ice cubes!
+[END]
