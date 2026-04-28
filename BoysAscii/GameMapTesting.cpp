@@ -281,7 +281,10 @@ int main () {
                 && TrailerPark.posIdentity[r][c].rep != '(' 
                 && TrailerPark.posIdentity[r][c].rep != '('
                 && TrailerPark.posIdentity[r][c].rep != '0'
-                && TrailerPark.posIdentity[r][c].rep != 'I') {
+                && TrailerPark.posIdentity[r][c].rep != 'I'
+                && TrailerPark.posIdentity[r][c].rep != 'J'
+                && TrailerPark.posIdentity[r][c].rep != 'R'
+                && TrailerPark.posIdentity[r][c].rep != 'B') {
                 TrailerPark.posIdentity[r][c].rep = TrailerPark.enviornmentLayer[r][c];
             }
         }
