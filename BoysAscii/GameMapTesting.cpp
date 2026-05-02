@@ -3,6 +3,10 @@
 #include <string>
 #include <cstdlib>
 
+// ANSI Escape Codes
+#define RESET   "\033[0m"
+#define YELLOW  "\033[33m"
+#define BOLD    "\033[1m"
 
 using namespace std;
 
@@ -118,27 +122,28 @@ class mapSprite : public mapObject {
     /*all move does is call the place object function but also run collision detection
     
     TODO: ask fucking theo about this fucking & symbol in the params -- idk i kinda understand why it needs to be there now*/
-  void move (gameMap &activeMap, int moveX, int moveY) {
-    int newY = y + moveY;
-    int newX = x + moveX;
-    
-    if (newY < 0 || newY > 19 || newX < 0 || newX > 30) {
-        cout << "cant move there out of bounds" << endl;
-        return;
-    }
+  bool move (gameMap &activeMap, int moveX, int moveY) {
+        int newY = y + moveY;
+        int newX = x + moveX;
+        
+        if (newY < 0 || newY > 19 || newX < 0 || newX > 30) {
+            cout << "cant move there out of bounds" << endl;
+            return true;
+        }
 
-    char dest = activeMap.enviornmentLayer[newY][newX];
-    if (dest != '%' && dest != '.' && dest != '#') {
-        cout << "cant move there its obstructed" << endl;
-        return;
-    }
-    
-    activeMap.posIdentity[newY][newX].rep = rep;
-    activeMap.posIdentity[y][x].rep = activeMap.enviornmentLayer[y][x];
-    x = newX;
-    y = newY;
-    activeMap.updateMap();
-}
+        char dest = activeMap.enviornmentLayer[newY][newX];
+        if (dest != '%' && dest != '.' && dest != '#') {
+            cout << "cant move there its obstructed" << endl;
+            return true;
+        }
+        
+        activeMap.posIdentity[newY][newX].rep = rep;
+        activeMap.posIdentity[y][x].rep = activeMap.enviornmentLayer[y][x];
+        x = newX;
+        y = newY;
+        activeMap.updateMap();
+        return false;
+    } 
     /*the thing that will let you talk to the characters and pick up grills
     TODO right now all interact does it check the tiles 3 x 3 around it for I and return it 
     it will need to be able to call sm that brings up the text window or interaction window or sm*/
@@ -179,8 +184,57 @@ activemap.placeObject(y,x,rep);
 };
 
 class opp : public mapSprite {
+    // Class for movement patterns and vision of lahey
     public :
-    /*the matrix that holds a opp's detection squares*/
+    int counter = 0; // counter for how many moves they have made in one direction, once it hits max they swap direction
+    int max = 15; // this is the number of moves they make in one direction before swapping, can be changed later
+
+    // The direction struct it just holds the x and y direction of movement for the opps, its used in patrol move and swap direction
+    struct Direction {
+        int x;
+        int y;
+    };
+
+    // The initial direction of lahey
+    Direction direction = {1,0};
+    int directionX = 1;
+    int directionY = 0;
+
+    // Function that swaps the direction from horizontal to vertical and vice versa, its used in patrol move when the lahey hits a wall or reaches its max moves in one direction
+    Direction swapDirection(Direction in) {
+        Direction out = {0,0};
+        if (in.x == 0) out.x = 1;
+        if (in.y == 0) out.y = 1;  
+        return out; 
+    }
+
+    // The patrol move function moves lahey in the current direction and if it hits a wall 
+    // it swaps direction and tries to move again if it hits another wall 
+    // it swaps direction again and tries to move if it hits a third wall 
+    // it just turns around and goes back the way it came, if it reaches its max moves in one direction it swaps direction
+    void patrolMove(gameMap &activeMap) {
+        bool observed = !move(activeMap, direction.x, direction.y);
+        if (observed) {
+            direction.x *= -1;
+            direction.y *= -1;
+            bool trapped = !move(activeMap, direction.x, direction.y);
+            if (trapped) {
+                direction = swapDirection(direction);
+                bool deadEnd = !move(activeMap, direction.x, direction.y);
+                if (deadEnd) {
+                    direction.x *= -1;
+                    direction.y *= -1;
+                }
+            } 
+            counter = 0;
+            return;
+        }
+        counter ++;
+        if (counter == max) {
+            swapDirection(direction);
+            counter = 0;
+        }
+    }
     
     
     
@@ -212,7 +266,11 @@ class opp : public mapSprite {
         int Rvision = 0;
         for (int r = (y - 2); r < y + 3; r++) {
             int Cvision = 0;
-            for (int c = (x - 2); c < x + 3; c++) {
+            for ( int c = (x - 2); c < x + 3; c++) { // columns 
+                if (r < 0 || r > 19 || c < 0 || c > 30) {
+                    Cvision++;
+                    continue;
+                }
                 if (activeMap.enviornmentLayer[r][c] == '.' && activeMap.posIdentity[r][c].rep != '@') {
                     activeMap.placeObject(r,c,vision[Rvision][Cvision]);
                 }
@@ -222,9 +280,12 @@ class opp : public mapSprite {
         }
     for (int row = 0; row < 5; row++) {
         for (int column = 0; column < 5; column ++ ) {
-            if (activeMap.posIdentity[(y - 2) + row][(x - 2) + column].rep == '@' && 
-                activeMap.enviornmentLayer[(y - 2) + row][(x - 2) + column] != '%' &&
-                activeMap.enviornmentLayer[(y - 2) + row][(x - 2) + column] != '#'
+            int checkY = (y - 2) + row; // The y value of the tile being checked in the posIdentity layer
+            int checkX = (x - 2) + column; // The x value of the tile being checked in the posIdentity layer
+            if (checkY < 0 || checkY > 19 || checkX < 0 || checkX > 30) continue; // edge detection for the vision range
+            if (activeMap.posIdentity[checkY][checkX].rep == '@' && 
+                activeMap.enviornmentLayer[checkY][checkX] != '%' &&
+                activeMap.enviornmentLayer[checkY][checkX] != '#'
                 /*when we add more interactable characters we will expand on this check*/) {
                 cout << "you're caught!" << endl;
                 return true;
@@ -234,6 +295,25 @@ class opp : public mapSprite {
     return false;
     }
 };
+
+// Function to highlight any interactables like grill within the 5x5 area around the player as they move in the enviornment layer using ansi codes
+void drawHighlightMap(gameMap &activeMap, mapSprite &player) {
+    for (int r = 0; r < 20; r++) {
+        for (int c = 0; c < 31; c++) {
+            char currentChar = activeMap.posIdentity[r][c].rep;
+            
+            // Check if within 5x5 range of player and is an interactable
+            if (r >= player.y - 2 && r <= player.y + 2 && 
+                c >= player.x - 2 && c <= player.x + 2 && 
+                currentChar == 'I') {
+                cout << YELLOW << BOLD << currentChar << RESET << ' ';
+            } else {
+                cout << currentChar << ' ';
+            }
+        }
+        cout << endl;
+    }
+}
 
 
 int main () {
@@ -254,8 +334,9 @@ int main () {
     mapSprite player;
     opp lahey;
 
-    lahey.x = 3;
-    lahey.y = 3;
+    lahey.x = 18;
+    lahey.y = 12;
+    lahey.max = 30;
     lahey.rep = '0';
     lahey.placeSprite(TrailerPark);
 
@@ -281,7 +362,10 @@ int main () {
                 && TrailerPark.posIdentity[r][c].rep != '(' 
                 && TrailerPark.posIdentity[r][c].rep != '('
                 && TrailerPark.posIdentity[r][c].rep != '0'
-                && TrailerPark.posIdentity[r][c].rep != 'I') {
+                && TrailerPark.posIdentity[r][c].rep != 'I'
+                && TrailerPark.posIdentity[r][c].rep != 'J'
+                && TrailerPark.posIdentity[r][c].rep != 'R'
+                && TrailerPark.posIdentity[r][c].rep != 'B') {
                 TrailerPark.posIdentity[r][c].rep = TrailerPark.enviornmentLayer[r][c];
             }
         }
@@ -360,7 +444,7 @@ int main () {
             player.interact(TrailerPark);
             break;
     }
-    lahey.move(TrailerPark,moveX,moveY);
+    lahey.patrolMove(TrailerPark);
     if (lahey.updateVision(TrailerPark)) {
         esc = true;
     }
