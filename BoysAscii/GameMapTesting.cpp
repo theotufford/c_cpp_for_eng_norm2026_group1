@@ -202,10 +202,7 @@ class opp : public mapSprite {
 
     // Function that swaps the direction from horizontal to vertical and vice versa, its used in patrol move when the lahey hits a wall or reaches its max moves in one direction
     Direction swapDirection(Direction in) {
-        Direction out = {0,0};
-        if (in.x == 0) out.x = 1;
-        if (in.y == 0) out.y = 1;  
-        return out; 
+       return {in.y, in.x}; 
     }
 
     // The patrol move function moves lahey in the current direction and if it hits a wall 
@@ -213,25 +210,20 @@ class opp : public mapSprite {
     // it swaps direction again and tries to move if it hits a third wall 
     // it just turns around and goes back the way it came, if it reaches its max moves in one direction it swaps direction
     void patrolMove(gameMap &activeMap) {
-        bool observed = !move(activeMap, direction.x, direction.y);
-        if (observed) {
-            direction.x *= -1;
-            direction.y *= -1;
-            bool trapped = !move(activeMap, direction.x, direction.y);
-            if (trapped) {
+            bool blocked = move(activeMap, direction.x, direction.y);
+            if (blocked) {
                 direction = swapDirection(direction);
-                bool deadEnd = !move(activeMap, direction.x, direction.y);
-                if (deadEnd) {
-                    direction.x *= -1;
-                    direction.y *= -1;
-                }
-            } 
+                blocked = move(activeMap, direction.x, direction.y);
+                if (blocked) {
+                    direction = (-direction.x, -direction.y);
+                    move(activeMap, direction.x, direction.y);
+                } 
             counter = 0;
             return;
         }
         counter ++;
-        if (counter == max) {
-            swapDirection(direction);
+        if (counter >= max) {
+            direction = swapDirection(direction);
             counter = 0;
         }
     }
@@ -335,7 +327,7 @@ int main () {
     opp lahey;
 
     lahey.x = 18;
-    lahey.y = 12;
+    lahey.y = 4;
     lahey.max = 30;
     lahey.rep = '0';
     lahey.placeSprite(TrailerPark);
@@ -347,10 +339,20 @@ int main () {
     
     // place your interactables 
 
-    mapInteractable grill;
-    grill.x = 15;
-    grill.y = 0;
-    grill.placeInteractable(TrailerPark);
+    mapInteractable grill1;
+    grill1.x = 26;
+    grill1.y = 1;
+    grill1.placeInteractable(TrailerPark);
+
+    mapInteractable grill2;
+    grill2.x = 19;
+    grill2.y = 10;
+    grill2.placeInteractable(TrailerPark);
+
+    mapInteractable grill3;
+    grill3.x = 6;
+    grill3.y = 18;
+    grill3.placeInteractable(TrailerPark);
 
     ////////////////////////////////////////////////////////////////////
 
@@ -370,8 +372,8 @@ int main () {
             }
         }
     }
-     lahey.updateVision(TrailerPark);
-    TrailerPark.updateMap();
+    lahey.updateVision(TrailerPark);
+    drawHighlightMap(TrailerPark, player);
     int moveX;
     int moveY;
 
@@ -448,7 +450,7 @@ int main () {
     if (lahey.updateVision(TrailerPark)) {
         esc = true;
     }
-    TrailerPark.updateMap();
+        drawHighlightMap(TrailerPark, player);
     }
     return 0;
 }
