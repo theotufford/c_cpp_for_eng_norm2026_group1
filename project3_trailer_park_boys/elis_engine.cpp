@@ -8,8 +8,7 @@ using namespace std;
 #define MAP_WIDTH 20
 #define MAP_HEIGHT 31
 
-// rework to be completely internal and readout with cout, store with the
-// display.txt file
+// this is all depereciated but I left it in for comparison
 class mapObject {
 public:
   int x;
