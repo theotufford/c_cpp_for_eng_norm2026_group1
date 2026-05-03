@@ -153,8 +153,9 @@ actorObj::actorObj(Game &owning_game) : gameObj(owning_game) {
   owning_game.actor_ptrs.push_back(this);
   prev_position = vector_2d(0, 0);
 }
-environment_object::environment_object(Game &owning_game, vector_2d position, vector<vector_2d> point_model)
-    : gameObj(owning_game){
+environment_object::environment_object(Game &owning_game, vector_2d position,
+                                       vector<vector_2d> point_model)
+    : gameObj(owning_game) {
   model = point_model;
   for (vector_2d model_point : model) {
     model_point = model_point + current_position;

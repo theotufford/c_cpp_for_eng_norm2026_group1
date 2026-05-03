@@ -1,0 +1,41 @@
+{
+  "prompt": "hey kid !!!",
+  "branch_tags": [],
+  "dialogue": [
+    "I sure hope julian hasnt talked to you yet"
+  ],
+  "options": [
+    {
+      "prompt": "he hasnt",
+      "dialogue": [
+        "good...",
+        "stay away from that guy hes a good for nothing criminal"
+      ]
+    },
+    {
+      "prompt": "what about it?",
+      "dialogue": [
+        "he didnt ask you to do any favors for him",
+        "did he?"
+      ],
+      "options": [
+        {
+          "prompt": "no he didnt",
+          "dialogue": [
+            "good",
+            "im keeping my eye on you though",
+            "stay away from those grills"
+          ]
+        },
+        {
+          "prompt": "he asked me to steal grills for him",
+          "dialogue": [
+            "AHA!",
+            "I KNEW HE STOLE MY GRILL",
+            "!!!!"
+          ]
+        }
+      ]
+    }
+  ]
+}
