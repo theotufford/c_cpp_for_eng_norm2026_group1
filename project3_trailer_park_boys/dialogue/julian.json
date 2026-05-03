@@ -1,0 +1,23 @@
+{
+  "prompt": "hey kid come here",
+  "branch_tags": [],
+  "dialogue": [
+    "Listen kid...",
+    "youre a minor, you cant get arrested",
+    "Im gonna need you to run around and steal some of these grills for me ok?"
+  ],
+  "options": [
+    {
+      "prompt": "no",
+      "dialogue": [
+        "whatever..."
+      ]
+    },
+    {
+      "prompt": "sounds awesome",
+      "dialogue": [
+        "thanks kid!"
+      ]
+    }
+  ]
+}

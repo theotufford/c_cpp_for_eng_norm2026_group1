@@ -1,0 +1,24 @@
+{
+  "prompt": "...",
+  "branch_tags": [],
+  "dialogue": [
+    "I heard julian had something to say to you"
+  ],
+  "options": [
+    {
+      "prompt": "ok",
+      "dialogue": [
+        "come back when youre done kid"
+      ]
+    },
+    {
+      "prompt": "I already talked to him",
+      "dialogue": [
+        "well then",
+        "when you steal all the grills come back to me",
+        "Ill fix em right up",
+        "(but not actually because theo ran out of time to implement anything)"
+      ]
+    }
+  ]
+}

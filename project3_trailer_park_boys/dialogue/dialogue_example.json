@@ -8,7 +8,7 @@
   ],
   "options": [
     {
-      "prompt": "exit_dialogue",
+      "prompt": ">exit dialogue<",
       "branch_tags": [
         "exit_choice"
       ],
